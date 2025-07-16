@@ -10,6 +10,11 @@ service UserService {
   rpc CreateUser(CreateUserRequest) returns (UserResponse);
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
   rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+}
+
+message GetUserRequest {
+  string userId = 1;
 }
 
 message CreateUserRequest {

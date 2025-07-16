@@ -5,6 +5,8 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.grpc.server.service.GrpcService;
 import ua.hudyma.domain.model.Profile;
 import ua.hudyma.domain.model.User;
@@ -25,8 +27,8 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void createUser(CreateUserRequest request, StreamObserver<UserResponse> responseObserver) {
-        User user = new User();
-        Profile profile = new Profile();
+        var user = new User();
+        var profile = new Profile();
         profile.setName(request.getName());
         profile.setSurname(request.getSurname());
         profile.setBirthday(parseDate(request.getBirthday()));
@@ -79,9 +81,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void updateUser(UpdateUserRequest request, StreamObserver<UserResponse> responseObserver) {
         String userId = request.getUserId();
-
         var userOpt = userRepository.findByUserId(userId);
-
         if (userOpt.isEmpty()) {
             responseObserver.onError(
                     Status.NOT_FOUND
@@ -90,18 +90,14 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             );
             return;
         }
-
         var user = userOpt.get();
         var profile = user.getProfile();
-
         if (!request.getName().isEmpty()) {
             profile.setName(request.getName());
         }
-
         if (!request.getSurname().isEmpty()) {
             profile.setSurname(request.getSurname());
         }
-
         if (!request.getBirthday().isEmpty()) {
             try {
                 Date birthday = new SimpleDateFormat("dd-MM-yyyy").parse(request.getBirthday());
@@ -115,21 +111,16 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                 return;
             }
         }
-
         if (!request.getEmail().isEmpty()) {
             profile.setEmail(request.getEmail());
         }
-
         if (!request.getPhoneNumber().isEmpty()) {
             profile.setPhoneNumber(request.getPhoneNumber());
         }
-
         if (!request.getPassword().isEmpty()) {
             profile.setPassword(request.getPassword());
         }
-
         userRepository.save(user);
-
         UserResponse response = UserResponse.newBuilder()
                 .setUserId(user.getUserId())
                 .setName(profile.getName())
@@ -139,10 +130,43 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
                 .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getUser(GetUserRequest request, StreamObserver<UserResponse> responseObserver) {
+        String userId = request.getUserId();
+
+        var userOpt = userRepository.findByUserId(userId);
+        if (userOpt.isEmpty()) {
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("User with ID " + userId + " not found.")
+                            .asRuntimeException()
+            );
+            return;
+        }
+
+        var user = userOpt.get();
+        var profile = user.getProfile();
+
+        UserResponse response = UserResponse.newBuilder()
+                .setUserId(user.getUserId())
+                .setName(profile.getName())
+                .setSurname(profile.getSurname())
+                .setBirthday(formatDate(profile.getBirthday()))
+                .setRegisteredOn(formatDate(profile.getRegisteredOn()))
+                .setEmail(profile.getEmail())
+                .setPhoneNumber(profile.getPhoneNumber())
+                .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+
+
 
 
 
