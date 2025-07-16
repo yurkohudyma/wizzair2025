@@ -1,0 +1,35 @@
+package ua.hudyma.domain.model;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import ua.hudyma.validator.PhoneNumber;
+
+import java.util.Date;
+
+@Embeddable
+@Data
+public class Profile {
+
+    private String name;
+    private String surname;
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    private Date birthday;
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    @CreationTimestamp
+    private Date registeredOn;
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    @UpdateTimestamp
+    private Date updatedOn;
+    @Column(nullable = false)
+    private String email;
+    @Transient
+    private String password;
+    @PhoneNumber
+    private String phoneNumber;
+
+}

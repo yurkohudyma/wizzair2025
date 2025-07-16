@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ua.hudyma.grpc.user";
+option java_outer_classname = "UserProto";
+
+package user;
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (UserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string surname = 2;
+  string birthday = 3;
+  string email = 4;
+  string phoneNumber = 5;
+  string password = 6;
+}
+
+message UserResponse {
+  string userId = 1;
+  string name = 2;
+  string surname = 3;
+  string birthday = 4;
+  string registeredOn = 5;
+  string email = 6;
+  string phoneNumber = 7;
+}
+
+message DeleteUserRequest {
+  string userId = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdateUserRequest {
+  string userId = 1;
+
+  string name = 2;         // nullable
+  string surname = 3;      // nullable
+  string birthday = 4;     // nullable
+  string email = 5;        // nullable
+  string phoneNumber = 6;  // nullable
+  string password = 7;     // nullable
+}
+
