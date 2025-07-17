@@ -1,15 +1,14 @@
-package ua.hudyma.domain.model;
+package ua.hudyma.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import ua.hudyma.validator.PhoneNumber;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Embeddable
 @Data
@@ -25,11 +24,11 @@ public class Profile {
     @JsonFormat(pattern = "dd-MM-yyyy")
     @UpdateTimestamp
     private Date updatedOn;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
-    @Transient
     private String password;
-    @PhoneNumber
     private String phoneNumber;
-
+    @ElementCollection
+    @CollectionTable(name = "user_addresses", joinColumns = @JoinColumn(name = "user_id"))
+    private List<Address> addressList = new ArrayList<>();
 }

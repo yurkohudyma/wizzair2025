@@ -48,11 +48,11 @@ message DeleteUserResponse {
 message UpdateUserRequest {
   string userId = 1;
 
-  string name = 2;         // nullable
-  string surname = 3;      // nullable
-  string birthday = 4;     // nullable
-  string email = 5;        // nullable
-  string phoneNumber = 6;  // nullable
-  string password = 7;     // nullable
+  string name = 2;
+  string surname = 3;
+  string birthday = 4;
+  string email = 5;
+  string phoneNumber = 6;
+  string password = 7;
 }
 

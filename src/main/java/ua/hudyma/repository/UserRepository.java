@@ -1,9 +1,8 @@
-package ua.hudyma.domain.repository;
+package ua.hudyma.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.redis.core.RedisHash;
 import org.springframework.stereotype.Repository;
-import ua.hudyma.domain.model.User;
+import ua.hudyma.domain.User;
 
 import java.util.Optional;
 

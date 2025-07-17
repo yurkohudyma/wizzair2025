@@ -5,13 +5,12 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.grpc.server.service.GrpcService;
-import ua.hudyma.domain.model.Profile;
-import ua.hudyma.domain.model.User;
-import ua.hudyma.domain.repository.UserRepository;
+import ua.hudyma.domain.Profile;
+import ua.hudyma.domain.User;
+import ua.hudyma.repository.UserRepository;
 import ua.hudyma.grpc.user.*;
+import ua.hudyma.validator.PhoneNumberValidator;
 
 import java.security.SecureRandom;
 import java.text.ParseException;
@@ -21,9 +20,11 @@ import java.util.Date;
 @Log4j2
 @GrpcService
 @RequiredArgsConstructor
-public class UserService extends UserServiceGrpc.UserServiceImplBase {
+public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
 
+    public static final String DD_MM_YYYY = "dd-MM-yyyy";
     private final UserRepository userRepository;
+    private final PhoneNumberValidator validator;
 
     @Override
     public void createUser(CreateUserRequest request, StreamObserver<UserResponse> responseObserver) {
@@ -100,7 +101,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
         }
         if (!request.getBirthday().isEmpty()) {
             try {
-                Date birthday = new SimpleDateFormat("dd-MM-yyyy").parse(request.getBirthday());
+                Date birthday = new SimpleDateFormat(DD_MM_YYYY).parse(request.getBirthday());
                 profile.setBirthday(birthday);
             } catch (ParseException e) {
                 responseObserver.onError(
@@ -114,7 +115,15 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
         if (!request.getEmail().isEmpty()) {
             profile.setEmail(request.getEmail());
         }
-        if (!request.getPhoneNumber().isEmpty()) {
+        if (!request.getPhoneNumber().isEmpty() &&
+                !validator.isPhoneValid(request.getPhoneNumber())) {
+            log.error("phone number {} is not VALID", request.getPhoneNumber());
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("Invalid phonenumber format. Use +380123456789 pattern with 10-15 digits")
+                            .asRuntimeException()
+            );
+        } else {
             profile.setPhoneNumber(request.getPhoneNumber());
         }
         if (!request.getPassword().isEmpty()) {
@@ -125,8 +134,8 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                 .setUserId(user.getUserId())
                 .setName(profile.getName())
                 .setSurname(profile.getSurname())
-                .setBirthday(new SimpleDateFormat("dd-MM-yyyy").format(profile.getBirthday()))
-                .setRegisteredOn(new SimpleDateFormat("dd-MM-yyyy").format(profile.getRegisteredOn()))
+                .setBirthday(new SimpleDateFormat(DD_MM_YYYY).format(profile.getBirthday()))
+                .setRegisteredOn(new SimpleDateFormat(DD_MM_YYYY).format(profile.getRegisteredOn()))
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
                 .build();
@@ -166,14 +175,9 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
     }
 
 
-
-
-
-
-
     private Date parseDate(String date) {
         try {
-            return new SimpleDateFormat("dd-MM-yyyy").parse(date);
+            return new SimpleDateFormat(DD_MM_YYYY).parse(date);
         } catch (ParseException e) {
             throw Status.INVALID_ARGUMENT
                     .withDescription("Invalid birthday format. Expected dd-MM-yyyy")
@@ -182,7 +186,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
     }
 
     private String formatDate(Date date) {
-        return new SimpleDateFormat("dd-MM-yyyy").format(date);
+        return new SimpleDateFormat(DD_MM_YYYY).format(date);
     }
 
     private String initUserId() {
