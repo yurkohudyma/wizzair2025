@@ -1,6 +1,7 @@
 package ua.hudyma.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class WizzairDiscountClub {
 
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
+    @JsonIgnore
     private User user;
 
     @Enumerated(value = EnumType.STRING)
@@ -31,5 +33,5 @@ public class WizzairDiscountClub {
 
     private enum AccountStatus {ACTIVE, EXPIRED, SYSTEM}
 
-    private enum MembershipType {STANDARD, PREMIUM, STANDARD_PLUS, PREMIUM_PLUS}
+    private enum MembershipType {STANDARD, PREMIUM, STANDARD_PLUS, PREMIUM_PLUS, SYSTEM}
 }

@@ -2,15 +2,29 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.Contract;
 import org.springframework.stereotype.Service;
+import ua.hudyma.domain.Address;
 import ua.hudyma.domain.User;
 import ua.hudyma.repository.UserRepository;
+
+import static ua.hudyma.util.IdGenerator.initUserId;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class UserService {
     private final UserRepository userRepository;
+
+    public User addUser(User user) {
+        user.setUserId(initUserId());
+        var wdc = user.getAccount();
+        if (wdc != null) {
+            wdc.setUser(user);
+        }
+        userRepository.save(user);
+        return user;
+    }
 
 
     public User updateUser (String userId, User newUser){
@@ -20,12 +34,29 @@ public class UserService {
         return user;
     }
 
+    //@Transactional
+    public User updateUser (String userId, Address address){
+        var user = userRepository.findByUserId(userId).orElseThrow();
+        applyAddress(user, address);
+        userRepository.save(user);
+        return user;
+    }
+
+    @Contract("_, _ -> param1")
+    private void applyAddress(User user, Address address) {
+        //var profile = user.getProfile();
+        var addressList = user.getAddressList();
+        addressList.add(address);
+        /*profile.setAddressList(addressList);
+        user.setProfile(profile);*/
+    }
+
     private void mergeValuesIfNotNull(User user, User newUser) {
+        var profile = user.getProfile();
         if (!newUser.getStatus().name().isEmpty()){
             user.setStatus(newUser.getStatus());
         }
         if (!newUser.getProfile().getPhoneNumber().isEmpty()){
-            var profile = user.getProfile();
             profile.setPhoneNumber(newUser.getProfile().getPhoneNumber());
             user.setProfile(profile);
         }

@@ -9,7 +9,9 @@ public class Address {
 
     private String street;
     private String city;
-    private String state;
+    private String region;
     private String postalCode;
     private String country;
+    private String building;
+    private String apartment;
 }

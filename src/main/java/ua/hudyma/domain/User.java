@@ -23,6 +23,7 @@ public class User {
     @Embedded
     private Profile profile;
     @OneToMany(mappedBy = "mainUser")
+    @JsonIgnore
     private List<Booking> bookingsAsMain = new ArrayList<>();
     @OneToOne(mappedBy = "user",
             cascade = CascadeType.ALL,
@@ -36,6 +37,10 @@ public class User {
     private List<Booking> bookingList = new ArrayList<>();
     @Enumerated(value = EnumType.STRING)
     private UserStatus status;
-
     public enum UserStatus {ACTIVE, DISABLED, SYSTEM}
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_addresses",
+            joinColumns = @JoinColumn(name = "user_id"))
+    private List<Address> addressList = new ArrayList<>();
 }

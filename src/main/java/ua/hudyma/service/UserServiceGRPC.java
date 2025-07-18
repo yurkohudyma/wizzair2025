@@ -1,6 +1,5 @@
 package ua.hudyma.service;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +11,13 @@ import ua.hudyma.grpc.user.*;
 import ua.hudyma.repository.UserRepository;
 import ua.hudyma.validator.PhoneNumberValidator;
 
-import java.security.SecureRandom;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+
+import static ua.hudyma.util.IdGenerator.initUserId;
 
 @Log4j2
 @GrpcService
@@ -23,6 +25,7 @@ import java.util.Date;
 public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
 
     public static final String DD_MM_YYYY = "dd-MM-yyyy";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private final UserRepository userRepository;
     private final PhoneNumberValidator validator;
 
@@ -46,8 +49,8 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
                 .setUserId(user.getUserId())
                 .setName(profile.getName())
                 .setSurname(profile.getSurname())
-                .setBirthday(formatDate(profile.getBirthday()))
-                .setRegisteredOn(formatDate(profile.getRegisteredOn()))
+                .setBirthday(stringifyDate(profile.getBirthday()))
+                .setRegisteredOn(profile.getRegisteredOn().toString())
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
                 .setStatus(UserStatus.valueOf(user.getStatus().name()))
@@ -102,17 +105,8 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
             profile.setSurname(request.getSurname());
         }
         if (!request.getBirthday().isEmpty()) {
-            try {
-                Date birthday = new SimpleDateFormat(DD_MM_YYYY).parse(request.getBirthday());
-                profile.setBirthday(birthday);
-            } catch (ParseException e) {
-                responseObserver.onError(
-                        Status.INVALID_ARGUMENT
-                                .withDescription("Invalid birthday format. Use dd-MM-yyyy.")
-                                .asRuntimeException()
-                );
-                return;
-            }
+            LocalDate birthday = LocalDate.parse(request.getBirthday());
+            profile.setBirthday(birthday);
         }
         if (!request.getEmail().isEmpty()) {
             profile.setEmail(request.getEmail());
@@ -170,8 +164,8 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
                 .setUserId(user.getUserId())
                 .setName(profile.getName())
                 .setSurname(profile.getSurname())
-                .setBirthday(formatDate(profile.getBirthday()))
-                .setRegisteredOn(formatDate(profile.getRegisteredOn()))
+                .setBirthday(stringifyDate(profile.getBirthday()))
+                .setRegisteredOn(profile.getRegisteredOn().toString())
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
                 .setStatus(UserStatus.valueOf(user.getStatus().name()))
@@ -182,23 +176,21 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
     }
 
 
-    private Date parseDate(String date) {
+    private LocalDate parseDate(String date) {
         try {
-            return new SimpleDateFormat(DD_MM_YYYY).parse(date);
-        } catch (ParseException e) {
+            return LocalDate.parse(date, DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
             throw Status.INVALID_ARGUMENT
                     .withDescription("Invalid birthday format. Expected dd-MM-yyyy")
                     .asRuntimeException();
         }
     }
 
-    private String formatDate(Date date) {
-        return new SimpleDateFormat(DD_MM_YYYY).format(date);
+    private String stringifyDate(LocalDate date) {
+        return date.toString();
     }
 
-    private String initUserId() {
-        return NanoIdUtils.randomNanoId(new SecureRandom(), NanoIdUtils.DEFAULT_ALPHABET, 8);
-    }
+
 }
 
 
