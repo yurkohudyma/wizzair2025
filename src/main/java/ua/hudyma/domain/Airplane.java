@@ -2,7 +2,6 @@ package ua.hudyma.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Entity
@@ -15,16 +14,18 @@ public class Airplane {
     private Long id;
     @Enumerated(value = EnumType.STRING)
     private AirplaneType type;
-    private String model;
     private Integer seatsQuantity;
-    @Getter
+
     @RequiredArgsConstructor
-    private enum AirplaneType {
+    public enum AirplaneType {
         A320_200(180),
         A320_NEO(186),
         A321_200(230),
         A321_NEO(239),
         A321_XLR(244);
         private final int seatsQuantity;
+        public int getSeatsQuantity() {
+            return seatsQuantity;
+        }
     }
 }

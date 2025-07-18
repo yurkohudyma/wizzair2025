@@ -1,5 +1,6 @@
 package ua.hudyma.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,14 +17,15 @@ public class Airport {
     private Long id;
     private String name;
     @Column (unique = true, nullable = false)
-    @SuppressWarnings({JAVA_S_116})
-    private String IATA_code;
-    @Column (unique = true, nullable = false)
-    @SuppressWarnings({JAVA_S_116})
-    private String ICAO_code;
+    private String iataCode;
+
+    @Column(unique = true, nullable = false)
+    private String icaoCode;
 
     @OneToMany(mappedBy = "from")
+    @JsonIgnore
     private List<Flight> departures;
     @OneToMany(mappedBy = "to")
+    @JsonIgnore
     private List<Flight> arrivals;
 }
