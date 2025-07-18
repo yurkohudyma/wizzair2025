@@ -22,19 +22,20 @@ public class User {
     private String userId;
     @Embedded
     private Profile profile;
-
+    @OneToMany(mappedBy = "mainUser")
+    private List<Booking> bookingsAsMain = new ArrayList<>();
     @OneToOne(mappedBy = "user",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
     private WizzairDiscountClub account;
     @NotNull
     @Positive
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "userList")
     @JsonIgnore
     private List<Booking> bookingList = new ArrayList<>();
     @Enumerated(value = EnumType.STRING)
     private UserStatus status;
 
-    private enum UserStatus {ACTIVE, DISABLED, SYSTEM}
+    public enum UserStatus {ACTIVE, DISABLED, SYSTEM}
 }

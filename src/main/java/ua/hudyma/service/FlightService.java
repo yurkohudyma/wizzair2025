@@ -2,6 +2,7 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import ua.hudyma.domain.Airplane;
 import ua.hudyma.domain.Flight;
@@ -48,6 +49,11 @@ public class FlightService {
             list.add(flight);
         }
         return flightRepository.saveAll(list);
+    }
+
+    @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
+    public List<Flight> getAll() {
+        return flightRepository.findAll();
     }
 
 

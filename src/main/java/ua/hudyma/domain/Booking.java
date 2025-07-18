@@ -46,13 +46,17 @@ public class Booking {
     @JsonIgnore
     private List<User> userList = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "main_user_id", nullable = false)
+    private User mainUser;
+
 
     @ManyToOne
     @JoinColumn(name = "flight_id", nullable = false)
     private Flight flight;
     @Positive
     @NotNull
-    private BigDecimal price;
+    private BigDecimal price = BigDecimal.ZERO;;
 
     @JsonFormat(pattern = "dd-MM-yyyy")
     @CreationTimestamp

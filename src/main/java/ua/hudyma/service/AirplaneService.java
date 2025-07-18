@@ -2,6 +2,7 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 public class AirplaneService {
     private final AirplaneRepository airplaneRepository;
 
+    @Cacheable(value = "planes", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
     public List<Airplane> getAll() {
         return airplaneRepository.findAll();
     }

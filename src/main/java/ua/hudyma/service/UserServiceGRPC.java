@@ -8,8 +8,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.grpc.server.service.GrpcService;
 import ua.hudyma.domain.Profile;
 import ua.hudyma.domain.User;
-import ua.hudyma.repository.UserRepository;
 import ua.hudyma.grpc.user.*;
+import ua.hudyma.repository.UserRepository;
 import ua.hudyma.validator.PhoneNumberValidator;
 
 import java.security.SecureRandom;
@@ -38,6 +38,7 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
         user.setUserId(initUserId());
         profile.setRegisteredOn(new Date());
         user.setProfile(profile);
+        user.setStatus(User.UserStatus.ACTIVE);
 
         userRepository.save(user);
 
@@ -49,6 +50,7 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
                 .setRegisteredOn(formatDate(profile.getRegisteredOn()))
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
+                .setStatus(UserStatus.valueOf(user.getStatus().name()))
                 .build();
 
         responseObserver.onNext(response);
@@ -129,6 +131,9 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
         if (!request.getPassword().isEmpty()) {
             profile.setPassword(request.getPassword());
         }
+        if (!request.getStatus().name().isEmpty()) {
+            user.setStatus(User.UserStatus.valueOf(request.getStatus().name()));
+        }
         userRepository.save(user);
         UserResponse response = UserResponse.newBuilder()
                 .setUserId(user.getUserId())
@@ -138,6 +143,7 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
                 .setRegisteredOn(new SimpleDateFormat(DD_MM_YYYY).format(profile.getRegisteredOn()))
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
+                .setStatus(UserStatus.valueOf(user.getStatus().name()))
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -168,6 +174,7 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
                 .setRegisteredOn(formatDate(profile.getRegisteredOn()))
                 .setEmail(profile.getEmail())
                 .setPhoneNumber(profile.getPhoneNumber())
+                .setStatus(UserStatus.valueOf(user.getStatus().name()))
                 .build();
 
         responseObserver.onNext(response);

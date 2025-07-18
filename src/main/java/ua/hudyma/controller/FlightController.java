@@ -27,5 +27,10 @@ public class FlightController {
     public List<Flight> addAll (@RequestBody FlightDto[] flightDtos) throws InvalidAirportException {
         return flightService.addAll (flightDtos);
     }
+
+    @GetMapping
+    public List<Flight> getAllPlanes (){
+        return flightService.getAll();
+    }
 }
 

@@ -13,6 +13,12 @@ service UserService {
   rpc GetUser(GetUserRequest) returns (UserResponse);
 }
 
+enum UserStatus {
+  ACTIVE = 0;
+  DISABLED = 1;
+  SYSTEM = 2;
+}
+
 message GetUserRequest {
   string userId = 1;
 }
@@ -24,6 +30,7 @@ message CreateUserRequest {
   string email = 4;
   string phoneNumber = 5;
   string password = 6;
+  UserStatus status = 8;
 }
 
 message UserResponse {
@@ -34,6 +41,7 @@ message UserResponse {
   string registeredOn = 5;
   string email = 6;
   string phoneNumber = 7;
+  UserStatus status = 8;
 }
 
 message DeleteUserRequest {
@@ -54,5 +62,6 @@ message UpdateUserRequest {
   string email = 5;
   string phoneNumber = 6;
   string password = 7;
+  UserStatus status = 8;
 }
 
