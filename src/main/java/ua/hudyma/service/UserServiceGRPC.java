@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 
-import static ua.hudyma.util.IdGenerator.initUserId;
+import static ua.hudyma.util.IdGenerator.generateId;
 
 @Log4j2
 @GrpcService
@@ -38,7 +38,7 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
         profile.setBirthday(parseDate(request.getBirthday()));
         profile.setEmail(request.getEmail());
         profile.setPhoneNumber(request.getPhoneNumber());
-        user.setUserId(initUserId());
+        user.setUserId(generateId(8));
         profile.setRegisteredOn(new Date());
         user.setProfile(profile);
         user.setStatus(User.UserStatus.ACTIVE);

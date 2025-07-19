@@ -8,7 +8,7 @@ import ua.hudyma.domain.Address;
 import ua.hudyma.domain.User;
 import ua.hudyma.repository.UserRepository;
 
-import static ua.hudyma.util.IdGenerator.initUserId;
+import static ua.hudyma.util.IdGenerator.generateId;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +17,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User addUser(User user) {
-        user.setUserId(initUserId());
+        user.setUserId(generateId(8));
         var wdc = user.getAccount();
         if (wdc != null) {
             wdc.setUser(user);

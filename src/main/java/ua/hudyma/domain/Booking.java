@@ -72,7 +72,7 @@ public class Booking {
     private List<Payment> paymentList = new ArrayList<>();
 
 
-    private enum BookingStatus {
+    public enum BookingStatus {
         CONFIRMED,  /** user has approved the flight selection with fixed price */
         PAID,       /** flight price has been paid in full */
         CANCELED,   /** booking has been canceled by WIZZAIR, but STILL is not REBOOKED or REFUNDED */
