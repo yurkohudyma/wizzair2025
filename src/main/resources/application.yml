@@ -1,6 +1,8 @@
 spring:
   application:
     name: wizzair2025
+  config:
+    import: "classpath:wizz.yml"
 
   datasource:
     url: jdbc:mysql://localhost:3306/wizzair2025

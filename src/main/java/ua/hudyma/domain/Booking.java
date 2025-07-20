@@ -50,26 +50,32 @@ public class Booking {
     @JoinColumn(name = "main_user_id", nullable = false)
     private User mainUser;
 
-
     @ManyToOne
     @JoinColumn(name = "flight_id", nullable = false)
     private Flight flight;
+    //todo introduce outbound/inbound_Flight options
+
     @Positive
     @NotNull
-    private BigDecimal price = BigDecimal.ZERO;;
+    private BigDecimal price = BigDecimal.ZERO;
 
     @JsonFormat(pattern = "dd-MM-yyyy")
     @CreationTimestamp
     private Date createdOn;
+
     @JsonFormat(pattern = "dd-MM-yyyy")
     @UpdateTimestamp
     private Date updatedOn;
 
     @Enumerated(value = EnumType.STRING)
-    private BookingStatus status;
+    private BookingStatus bookingStatus;
 
     @OneToMany(mappedBy = "booking")
     private List<Payment> paymentList = new ArrayList<>();
+
+    @OneToOne
+    @JoinColumn (name = "tariff_id")
+    private Tariff tariff;
 
 
     public enum BookingStatus {

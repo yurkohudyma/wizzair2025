@@ -1,0 +1,9 @@
+wizz:
+  flex:
+    tariff: 20
+  priority:
+    tariff: 15
+  online_registration:
+    tariff: 1.5
+  airport_registration:
+    fee: 13
