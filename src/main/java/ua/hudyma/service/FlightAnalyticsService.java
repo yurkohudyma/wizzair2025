@@ -1,12 +1,12 @@
 package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CachePut;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ua.hudyma.domain.Flight;
+import ua.hudyma.dto.FlightDistancesDto;
 import ua.hudyma.repository.FlightRepository;
 
 import java.time.LocalDateTime;
@@ -14,6 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class FlightAnalyticsService {
 
     private final FlightRepository flightRepository;
@@ -28,12 +29,13 @@ public class FlightAnalyticsService {
         return loadTopFlightsFromDb();
     }
 
-    @Scheduled(fixedRate = 60 * 60 * 1000) // щогодини
-    @CachePut(value = "topFlights", key = "'weekly'")
-    public List<Flight> updateTopFlightsCache() {
-        return loadTopFlightsFromDb();
+    @Cacheable(
+            value = "flightsDistances",
+            key = "'ports'",
+            unless = "#result == null || #result.isEmpty()"
+    )
+    public List<FlightDistancesDto> getAllDistancesBetweenPorts() {
+        return flightRepository.findAllDistancesBetweenPorts();
     }
-
-
 }
 

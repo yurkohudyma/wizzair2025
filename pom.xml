@@ -52,7 +52,6 @@
 			<version>2.1.1</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>

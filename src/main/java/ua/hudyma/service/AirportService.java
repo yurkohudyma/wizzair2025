@@ -29,6 +29,8 @@ public class AirportService {
     }
 
     public Double getDistanceBtwPorts(AirportDistanceDto airportDto) {
-        return DistanceCalculator.haversine(airportDto);
+        log.info(airportDto);
+        //return DistanceCalculator.haversine(airportDto);
+        return DistanceCalculator.vincenty(airportDto);
     }
 }

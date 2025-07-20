@@ -3,8 +3,6 @@ package ua.hudyma.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Airplane;
@@ -29,22 +27,24 @@ public class FlightService {
     private final AirplaneService airplaneService;
     private final AirportService airportService;
 
+
+
     @Transactional
-    public ResponseEntity<String> recalculateMissingDistancesForFlights() {
+    public boolean recalculateMissingDistancesForFlights() {
         var flightsToUpdate = flightRepository.findAll().stream()
                 .filter(flight -> flight.getDistancePorts() == null)
-                .peek(flight -> {
-                    AirportDistanceDto dto = getAirportDistanceDto(flight);
+                .map(flight -> {
+                    var dto = getAirportDistanceDto(flight);
                     double distance = airportService.getDistanceBtwPorts(dto);
                     flight.setDistancePorts(BigDecimal.valueOf(distance));
+                    return flight;
                 })
                 .toList();
         if (!flightsToUpdate.isEmpty()) {
             flightRepository.saveAll(flightsToUpdate);
-            return ResponseEntity.ok("Distances successfully recalc");
+            return true;
         } else {
-            log.info("No flights needed distance recalculation.");
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+            return false;
         }
     }
 
@@ -53,17 +53,13 @@ public class FlightService {
         var list = new ArrayList<Flight>();
         for (FlightDto flightDto : dtos) {
             var flight = new Flight();
-            if (flightDto.from().equals(flightDto.to())){
+            if (flightDto.from().equals(flightDto.to())) {
                 throw new InvalidAirportException("FROM and TO port should not coincide");
             }
             var departurePort = airportService
                     .findByIATacode(flightDto.from());
             var destinationPort = airportService
                     .findByIATacode(flightDto.to());
-
-            //todo implement injecting into DB already counted distance between ports
-
-
 
             flight.setFrom(departurePort);
             flight.setTo(destinationPort);
@@ -86,11 +82,13 @@ public class FlightService {
     }
 
     private AirportDistanceDto getAirportDistanceDto(Flight flight) {
-        return new AirportDistanceDto(
+        var dto = new AirportDistanceDto(
                 flight.getFrom().getLat(),
                 flight.getFrom().getLon(),
                 flight.getTo().getLat(),
                 flight.getTo().getLon());
+        log.info(dto);
+        return dto;
     }
 
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")

@@ -43,6 +43,7 @@ logging:
     ua.hudyma: DEBUG
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport: WARN
 
 management:
   endpoints:
