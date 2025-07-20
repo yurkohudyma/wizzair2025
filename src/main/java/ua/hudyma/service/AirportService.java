@@ -6,7 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ua.hudyma.domain.Airport;
+import ua.hudyma.dto.AirportDistanceDto;
 import ua.hudyma.repository.AirportRepository;
+import ua.hudyma.util.DistanceCalculator;
 
 import java.util.Arrays;
 
@@ -18,10 +20,15 @@ public class AirportService {
 
     public ResponseEntity<String> addAllPorts(Airport[] airports) {
         airportRepository.saveAll(Arrays.asList(airports));
-        return ResponseEntity.status(HttpStatus.CREATED).body("Saved " + airports.length + " ports");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Saved " + airports.length + " ports");
     }
 
     public Airport findByIATacode(String code) {
         return airportRepository.findByIataCode(code);
+    }
+
+    public Double getDistanceBtwPorts(AirportDistanceDto airportDto) {
+        return DistanceCalculator.haversine(airportDto);
     }
 }

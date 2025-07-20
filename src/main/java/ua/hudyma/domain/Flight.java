@@ -7,6 +7,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class Flight {
     @JsonFormat(pattern = "HH:mm")
     @Column(nullable = false)
     private LocalTime flightTime;
+    private BigDecimal distancePorts;
     @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(nullable = false)
     private LocalDate flightDate;

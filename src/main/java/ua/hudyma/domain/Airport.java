@@ -10,8 +10,6 @@ import java.util.List;
 @Table(name = "airports")
 @Data
 public class Airport {
-
-    public static final String JAVA_S_116 = "java:S116";
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,4 +26,9 @@ public class Airport {
     @OneToMany(mappedBy = "to")
     @JsonIgnore
     private List<Flight> arrivals;
+    @Column(nullable = false)
+    private Double lat;
+    @Column(nullable = false)
+    private Double lon;
+    private Integer ele;
 }

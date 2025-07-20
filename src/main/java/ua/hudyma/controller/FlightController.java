@@ -23,6 +23,12 @@ public class FlightController {
         return flightAnalyticsService.getTopFlightsLast7Days();
     }
 
+    @GetMapping("calcMissingDistancesAllFlights")
+    public void calculateAllMissingDistances (){
+        flightService.recalculateMissingDistancesForFlights();
+    }
+
+
     @PostMapping("/addAll")
     public List<Flight> addAll (@RequestBody FlightDto[] flightDtos) throws InvalidAirportException {
         return flightService.addAll (flightDtos);

@@ -1,5 +1,6 @@
 package ua.hudyma.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class Tariff {
     private TariffType tariffType;
 
     @OneToOne(mappedBy = "tariff")
+    @JsonIgnore
     private Booking booking;
 
     Boolean wizzFlex = false;

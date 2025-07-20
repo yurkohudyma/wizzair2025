@@ -1,6 +1,5 @@
 package ua.hudyma.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,13 +28,13 @@ public class TariffService {
     @Value("${wizz.airport_registration.fee}")
     private BigDecimal airportRegistrationFee;
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
         log.info("Flex tariff = {}", wizzFlexTariff);
         log.info("Priority tariff = {}", wizzPriorityTariff);
         log.info("Online Registration Tariff = {}", onlineRegistrationTariff);
         log.info("Airport Registration Fee = {}", airportRegistrationFee);
-    }
+    }*/
 
     public BigDecimal calculateTariffTotal(TariffDto tariffDto, BigDecimal passengerQty) {
         BigDecimal bd = new BigDecimal(0);
@@ -48,11 +47,9 @@ public class TariffService {
         if (tariffDto.airportRegistration()){
             bd = bd.add(onlineRegistrationTariff.multiply(passengerQty));
         }
-
         if (tariffDto.airportRegistration()){
             bd = bd.add(airportRegistrationFee.multiply(passengerQty));
         }
-        bd = bd.multiply(tariffDto.tariffType().getCoefficient());
         return bd;
     }
 

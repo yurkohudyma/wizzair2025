@@ -25,6 +25,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
     private final TariffService tariffService;
+    private final AirportService airportService;
 
     public Booking addBooking(BookingDto dto) {
         var newBooking = new Booking();
@@ -41,16 +42,26 @@ public class BookingService {
                 .map(Optional::get)
                 .toList();
         newBooking.setUserList(userList);
-        //todo implement haversine algo for direct distance
-        //todo calculate trip amount
-        //todo introduce airportFee, add to the overall price
-        newBooking.setPrice(tariffService
-                .calculateTariffTotal(dto.tariffDto(),
-                        BigDecimal.valueOf(
-                                userList.size()).add(BigDecimal.ONE)));
         var flight = flightRepository
                 .findById(dto.flightId()).orElseThrow();
         newBooking.setFlight(flight);
+        var tariffTotal = tariffService
+                .calculateTariffTotal(dto.tariffDto(),
+                        BigDecimal.valueOf(
+                                userList.size()).add(BigDecimal.ONE));
+        var distanceBetweenPorts = flight.getDistancePorts();
+        if (distanceBetweenPorts == null){
+            throw new IllegalArgumentException
+                    ("DISTANCE FOR THE FLIGHT HAS NOT BEEN CALCULATED and/or NOT STORED IN DB");
+        }
+        var travelCostPerPassenger = distanceBetweenPorts
+                .multiply(dto.tariffDto()
+                        .tariffType()
+                        .getCoefficient());
+        log.info ("Tariff TOTAL = {}", tariffTotal);
+        log.info ("TravelCost = {}", travelCostPerPassenger);
+        log.info ("Distance is = {}", distanceBetweenPorts);
+        newBooking.setPrice(travelCostPerPassenger.add(tariffTotal));
         newBooking.setTariff(populateNewTariff(dto.tariffDto()));
         return bookingRepository.save(newBooking);
     }
