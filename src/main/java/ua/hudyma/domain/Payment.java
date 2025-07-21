@@ -24,6 +24,8 @@ public class Payment {
     @ManyToOne(optional = false)
     @JoinColumn(name = "booking_id")
     private Booking booking;
+    @Column(nullable = false)
+    private String paymentId;
 
     public enum PaymentStatus {PENDING, REJECTED, REFUNDED, COMPLETE}
 }
