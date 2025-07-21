@@ -9,6 +9,7 @@ import ua.hudyma.domain.Airplane;
 import ua.hudyma.domain.Flight;
 import ua.hudyma.dto.AirportDistanceDto;
 import ua.hudyma.dto.FlightDto;
+import ua.hudyma.dto.FlightResponseDto;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.repository.FlightRepository;
 
@@ -28,10 +29,9 @@ public class FlightService {
     private final AirportService airportService;
 
 
-
     @Transactional
-    public boolean recalculateMissingDistancesForFlights() {
-        var flightsToUpdate = flightRepository.findAll().stream()
+    public List<Flight> recalculateMissingDistancesForFlights() {
+        return flightRepository.findAll().stream()
                 .filter(flight -> flight.getDistancePorts() == null)
                 .map(flight -> {
                     var dto = getAirportDistanceDto(flight);
@@ -40,36 +40,29 @@ public class FlightService {
                     return flight;
                 })
                 .toList();
-        if (!flightsToUpdate.isEmpty()) {
-            flightRepository.saveAll(flightsToUpdate);
-            return true;
-        } else {
-            return false;
-        }
     }
 
 
-    public List<Flight> addAll(FlightDto[] dtos) throws InvalidAirportException {
+    public List<FlightResponseDto> addAll(FlightDto[] dtos) throws InvalidAirportException {
         var list = new ArrayList<Flight>();
         for (FlightDto flightDto : dtos) {
             var flight = new Flight();
             if (flightDto.from().equals(flightDto.to())) {
+                log.error("Departure port {} and destination {} coincide",
+                        flightDto.from(), flightDto.to());
                 throw new InvalidAirportException("FROM and TO port should not coincide");
             }
-            var departurePort = airportService
-                    .findByIATacode(flightDto.from());
-            var destinationPort = airportService
-                    .findByIATacode(flightDto.to());
+            var departurePort = airportService.findByIATacode(flightDto.from());
+            var destinationPort = airportService.findByIATacode(flightDto.to());
 
             flight.setFrom(departurePort);
             flight.setTo(destinationPort);
-
-            flight.setFlightNumber(getFlightNumber());
+            flight.setFlightNumber(generateFlightNumber());
             flight.setFlightDate(generateDate());
             flight.setFlightTime(generateTime());
 
-            var airplane = airplaneService
-                    .getByType(Airplane.AirplaneType.valueOf(flightDto.planeType()));
+            var airplane = airplaneService.getByType(
+                    Airplane.AirplaneType.valueOf(flightDto.planeType()));
             flight.setAirplane(airplane);
 
             var airportDto = getAirportDistanceDto(flight);
@@ -78,17 +71,28 @@ public class FlightService {
 
             list.add(flight);
         }
-        return flightRepository.saveAll(list);
+        var savedFlights = flightRepository.saveAll(list);
+
+        return savedFlights
+                .stream()
+                .map(flight -> new FlightResponseDto(
+                        flight.getFlightNumber(),
+                        flight.getFrom().getIataCode(),
+                        flight.getTo().getIataCode(),
+                        flight.getAirplane().toString(),
+                        flight.getDistancePorts(),
+                        flight.getFlightDate(),
+                        flight.getFlightTime()
+                )).toList();
     }
 
+
     private AirportDistanceDto getAirportDistanceDto(Flight flight) {
-        var dto = new AirportDistanceDto(
+        return new AirportDistanceDto(
                 flight.getFrom().getLat(),
                 flight.getFrom().getLon(),
                 flight.getTo().getLat(),
                 flight.getTo().getLon());
-        log.info(dto);
-        return dto;
     }
 
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
@@ -97,7 +101,7 @@ public class FlightService {
     }
 
 
-    private String getFlightNumber() {
+    private String generateFlightNumber() {
         return "WZZ" + String.format("%04d", new SecureRandom().nextInt(9999));
     }
 

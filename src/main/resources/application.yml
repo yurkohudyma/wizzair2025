@@ -16,8 +16,9 @@ spring:
     show-sql: false
     open-in-view: false
     properties:
-      hibernate:
-        format_sql: true
+      hibernate.format_sql: true
+
+
   cache:
     type: redis
     redis:

@@ -39,6 +39,6 @@ public class DistanceCalculator {
         GeodeticCurve geoCurve = new GeodeticCalculator()
                 .calculateGeodeticCurve(Ellipsoid.WGS84, from, to);
 
-        return geoCurve.getEllipsoidalDistance() / 1000.0; // км
+        return geoCurve.getEllipsoidalDistance() / 1000.0;
     }
 }

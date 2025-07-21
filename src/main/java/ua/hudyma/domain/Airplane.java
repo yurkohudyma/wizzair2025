@@ -22,7 +22,8 @@ public class Airplane {
         A320_NEO(186),
         A321_200(230),
         A321_NEO(239),
-        A321_XLR(244);
+        A321_XLR(244),
+        A350_900ULR(161);
         private final int seatsQuantity;
         public int getSeatsQuantity() {
             return seatsQuantity;

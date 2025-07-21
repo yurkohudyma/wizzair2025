@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ua.hudyma.domain.Flight;
 import ua.hudyma.dto.FlightDistancesDto;
 import ua.hudyma.dto.FlightDto;
+import ua.hudyma.dto.FlightResponseDto;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.service.FlightAnalyticsService;
 import ua.hudyma.service.FlightService;
@@ -27,15 +28,17 @@ public class FlightController {
     }
 
     @GetMapping("calcMissingDistancesAllFlights")
-    public ResponseEntity<String> calculateAllMissingDistances (){
-        if (flightService.recalculateMissingDistancesForFlights()) {
-            return ResponseEntity.ok("Distances successfully recalc");
+    public ResponseEntity<String> calculateAllMissingDistances() {
+        var list = flightService.recalculateMissingDistancesForFlights();
+        if (list.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        var resStr = String.format("Distances successfully recalc for %s", list.size());
+        return ResponseEntity.ok(resStr);
     }
 
     @GetMapping("/getDistancesBtwPorts")
-    public ResponseEntity<List<FlightDistancesDto>> getDistancesFromAllPorts (){
+    public ResponseEntity<List<FlightDistancesDto>> getDistancesFromAllPorts() {
         var res = flightAnalyticsService
                 .getAllDistancesBetweenPorts();
         return ResponseEntity.ok(res);
@@ -43,13 +46,13 @@ public class FlightController {
 
 
     @PostMapping("/addAll")
-    public List<Flight> addAll (@RequestBody FlightDto[] flightDtos)
+    public List<FlightResponseDto> addAll(@RequestBody FlightDto[] flightDtos)
             throws InvalidAirportException {
-        return flightService.addAll (flightDtos);
+        return flightService.addAll(flightDtos);
     }
 
     @GetMapping
-    public List<Flight> getAllPlanes (){
+    public List<Flight> getAllPlanes() {
         return flightService.getAll();
     }
 }

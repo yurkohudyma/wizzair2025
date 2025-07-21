@@ -25,5 +25,5 @@ public class Payment {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    private enum PaymentStatus {PENDING, REJECTED, REFUNDED, COMPLETE}
+    public enum PaymentStatus {PENDING, REJECTED, REFUNDED, COMPLETE}
 }
