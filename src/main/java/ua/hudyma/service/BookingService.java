@@ -27,7 +27,6 @@ public class BookingService {
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
     private final TariffService tariffService;
-    private final AirportService airportService;
 
     public Booking addBooking(BookingDto dto) {
         var newBooking = new Booking();
