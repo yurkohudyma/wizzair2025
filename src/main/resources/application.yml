@@ -9,6 +9,8 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+    dbName: wizzair2025
+    mysqldump-path: C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe
 
   jpa:
     hibernate:

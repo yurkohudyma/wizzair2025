@@ -28,14 +28,6 @@ public class TariffService {
     @Value("${wizz.airport_registration.fee}")
     private BigDecimal airportRegistrationFee;
 
-    /*@PostConstruct
-    public void init() {
-        log.info("Flex tariff = {}", wizzFlexTariff);
-        log.info("Priority tariff = {}", wizzPriorityTariff);
-        log.info("Online Registration Tariff = {}", onlineRegistrationTariff);
-        log.info("Airport Registration Fee = {}", airportRegistrationFee);
-    }*/
-
     public BigDecimal calculateTariffTotal(TariffDto tariffDto, BigDecimal passengerQty) {
         BigDecimal bd = new BigDecimal(0);
         if (tariffDto.wizzFlex()){
