@@ -10,7 +10,9 @@ import ua.hudyma.domain.Flight;
 import ua.hudyma.dto.AirportDistanceDto;
 import ua.hudyma.dto.FlightDto;
 import ua.hudyma.dto.FlightResponseDto;
+import ua.hudyma.dto.FullFlightDto;
 import ua.hudyma.exception.InvalidAirportException;
+import ua.hudyma.mapper.FlightMapper;
 import ua.hudyma.repository.FlightRepository;
 
 import java.math.BigDecimal;
@@ -31,6 +33,7 @@ public class FlightService {
 
     @Transactional
     public List<Flight> recalculateMissingDistancesForFlights() {
+
         return flightRepository.findAll().stream()
                 .filter(flight -> flight.getDistancePorts() == null)
                 .map(flight -> {
@@ -96,8 +99,9 @@ public class FlightService {
     }
 
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
-    public List<Flight> getAll() {
-        return flightRepository.findAll();
+    public List<FullFlightDto> getAll() {
+        var list =  flightRepository.findAll();
+        return list.stream().map(FlightMapper.INSTANCE::toDto).toList();
     }
 
 

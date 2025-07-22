@@ -53,7 +53,10 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "flight_id", nullable = false)
     private Flight flight;
-    //todo introduce outbound/inbound_Flight options
+
+    @ManyToOne
+    @JoinColumn(name = "inbound_flight_id")
+    private Flight inboundFlight;
 
     @Positive
     @NotNull

@@ -9,6 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "airports")
 @Data
+
 public class Airport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

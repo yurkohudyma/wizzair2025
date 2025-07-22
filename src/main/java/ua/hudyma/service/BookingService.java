@@ -5,9 +5,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ua.hudyma.domain.Booking;
 import ua.hudyma.domain.Booking.BookingStatus;
+import ua.hudyma.domain.Flight;
 import ua.hudyma.domain.Tariff;
 import ua.hudyma.dto.BookingDto;
 import ua.hudyma.dto.TariffDto;
+import ua.hudyma.exception.FlightNotInterconnectedException;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.UserRepository;
@@ -45,6 +47,12 @@ public class BookingService {
         var flight = flightRepository
                 .findById(dto.flightId()).orElseThrow();
         newBooking.setFlight(flight);
+        var inboundFlight = flightRepository.findById(dto.inboundFlightId()).orElseThrow();
+        if (!checkFlightsInterconnection(flight, inboundFlight)) {
+            log.error("you cannot fly to/from different ports within one booking");
+            throw new FlightNotInterconnectedException("departure or destination port should be THE SAME");
+        }
+        newBooking.setInboundFlight(inboundFlight);
         var tariffTotal = tariffService
                 .calculateTariffTotal(dto.tariffDto(),
                         BigDecimal.valueOf(
@@ -64,6 +72,11 @@ public class BookingService {
         newBooking.setPrice(travelCostPerPassenger.add(tariffTotal));
         newBooking.setTariff(populateNewTariff(dto.tariffDto()));
         return bookingRepository.save(newBooking);
+    }
+
+    private boolean checkFlightsInterconnection(Flight flight, Flight inboundFlight) {
+        return flight.getTo().getIataCode().equals(inboundFlight.getTo().getIataCode()) ||
+                flight.getFrom().getIataCode().equals(inboundFlight.getTo().getIataCode());
     }
 
     private Tariff populateNewTariff(TariffDto tariffDto) {

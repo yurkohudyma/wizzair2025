@@ -8,6 +8,7 @@ import ua.hudyma.domain.Flight;
 import ua.hudyma.dto.FlightDistancesDto;
 import ua.hudyma.dto.FlightDto;
 import ua.hudyma.dto.FlightResponseDto;
+import ua.hudyma.dto.FullFlightDto;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.service.FlightAnalyticsService;
 import ua.hudyma.service.FlightService;
@@ -52,7 +53,7 @@ public class FlightController {
     }
 
     @GetMapping
-    public List<Flight> getAllPlanes() {
+    public List<FullFlightDto> getAllPlanes() {
         return flightService.getAll();
     }
 }
