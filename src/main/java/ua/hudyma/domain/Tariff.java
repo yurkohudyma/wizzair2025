@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "tariffs")
@@ -39,6 +41,9 @@ public class Tariff {
         public BigDecimal getCoefficient() {
             return coefficient;
         }
-
     }
+
+    @Transient
+    @JsonIgnore
+    private Map<String, BigDecimal> invoiceMap = new HashMap<>();
 }

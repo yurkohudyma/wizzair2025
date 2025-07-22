@@ -6,15 +6,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua.hudyma.domain.Tariff;
 import ua.hudyma.dto.TariffDto;
+import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.TariffRepository;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class TariffService {
     private final TariffRepository tariffRepository;
+    private final BookingRepository bookingRepository;
 
     @Value("${wizz.flex.tariff}")
     private BigDecimal wizzFlexTariff;
@@ -28,21 +32,44 @@ public class TariffService {
     @Value("${wizz.airport_registration.fee}")
     private BigDecimal airportRegistrationFee;
 
-    public BigDecimal calculateTariffTotal(TariffDto tariffDto, BigDecimal passengerQty) {
-        BigDecimal bd = new BigDecimal(0);
+    public Map<String, BigDecimal> prepareTariffTotalMap(
+            TariffDto tariffDto,
+            BigDecimal passengerQty,
+            String confirmationCode) {
+        var tariffMap = new HashMap<String, BigDecimal>();
+        var tariffAmount = BigDecimal.ZERO;
         if (tariffDto.wizzFlex()){
-            bd = bd.add(wizzFlexTariff.multiply(passengerQty));
+            var amount = wizzFlexTariff.multiply(passengerQty);
+            tariffAmount = tariffAmount.add(amount);
+            tariffMap.put("wizzFlexTariff", wizzFlexTariff);
+            tariffMap.put("wizzFlexTotal", amount);
         }
         if (tariffDto.wizzPriority()){
-            bd = bd.add(wizzPriorityTariff.multiply(passengerQty));
+            var amount = wizzPriorityTariff.multiply(passengerQty);
+            tariffAmount = tariffAmount.add(amount);
+            tariffMap.put("wizzPriorityTariff", wizzPriorityTariff);
+            tariffMap.put("wizzPriorityTotal", amount);
         }
         if (tariffDto.airportRegistration()){
-            bd = bd.add(onlineRegistrationTariff.multiply(passengerQty));
+            var amount = onlineRegistrationTariff.multiply(passengerQty);
+            tariffAmount = tariffAmount.add(amount);
+            tariffMap.put("onlineRegistrationTariff", onlineRegistrationTariff);
+            tariffMap.put("onlineRegistrationTotal", amount);
         }
         if (tariffDto.airportRegistration()){
-            bd = bd.add(airportRegistrationFee.multiply(passengerQty));
+            var amount = airportRegistrationFee.multiply(passengerQty);
+            tariffAmount = tariffAmount.add(amount);
+            tariffMap.put("airportRegistrationFee", airportRegistrationFee);
+            tariffMap.put("airportRegistrationTotal", amount);
         }
-        return bd;
+        tariffMap.put("tariffAmount", tariffAmount);
+        tariffMap.put("passengers Quantity", passengerQty);
+        if (confirmationCode != null){
+            var booking = bookingRepository.findByConfirmationCode(confirmationCode).orElseThrow();
+            booking.getTariff().setInvoiceMap(tariffMap);
+            tariffRepository.save(booking.getTariff());
+        }
+        return tariffMap;
     }
 
     public void save(Tariff tariff) {

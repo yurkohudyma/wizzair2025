@@ -35,3 +35,4 @@ build/
 /mvnw.cmd
 /.gitattributes
 /src/main/resources/db/migration/
+/sql/

@@ -81,7 +81,6 @@ public class Booking {
     @JoinColumn (name = "tariff_id")
     private Tariff tariff;
 
-
     public enum BookingStatus {
         CONFIRMED,  /** user has approved the flight selection with fixed price */
         PAID,       /** flight price has been paid in full */

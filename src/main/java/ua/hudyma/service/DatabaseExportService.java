@@ -30,6 +30,18 @@ public class DatabaseExportService {
     @Value("${spring.datasource.mysqldump-path}")
     private String mysqldumpPath;
 
+
+    public String repair() {
+        try {
+            flyway.repair();
+            log.info("✅ Flyway repair executed successfully.");
+            return "Flyway repair completed successfully.";
+        } catch (Exception e) {
+            log.error("❌ Flyway repair failed", e);
+            return "Flyway repair failed: " + e.getMessage();
+        }
+    }
+
     public String exportDatabase() {
         try {
             var currentMigration = flyway.info().current();
@@ -38,7 +50,7 @@ public class DatabaseExportService {
                 return "No migrations applied yet";
             }
             int version = Integer.parseInt(currentMigration.getVersion().toString()) + 1;
-            final String filePath = "src/main/resources/db/migration/V" + version + "__db_export.sql" ;
+            final String filePath = "sql/V" + version + "_mysql_dump.sql" ;
             List<String> command = List.of(
                     mysqldumpPath,
                     "-u" + username,

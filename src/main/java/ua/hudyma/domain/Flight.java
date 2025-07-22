@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "flights")
 @Data
 public class Flight {
-    public Long getId() {
+    /*public Long getId() {
         return id;
     }
 
@@ -112,7 +112,7 @@ public class Flight {
 
     public void setInboundBookings(List<Booking> inboundBookings) {
         this.inboundBookings = inboundBookings;
-    }
+    }*/
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -3,6 +3,7 @@ package ua.hudyma.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Booking;
 import ua.hudyma.domain.Booking.BookingStatus;
 import ua.hudyma.domain.Flight;
@@ -16,6 +17,7 @@ import ua.hudyma.repository.UserRepository;
 import ua.hudyma.util.IdGenerator;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -23,6 +25,7 @@ import java.util.Optional;
 @Log4j2
 public class BookingService {
 
+    private final BigDecimal distancePerPassengerCoefficient = BigDecimal.valueOf(0.15);
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
@@ -52,25 +55,56 @@ public class BookingService {
             throw new FlightNotInterconnectedException("departure or destination port should be THE SAME");
         }
         newBooking.setInboundFlight(inboundFlight);
-        var tariffTotal = tariffService
-                .calculateTariffTotal(dto.tariffDto(),
-                        BigDecimal.valueOf(
-                                userList.size()).add(BigDecimal.ONE));
+        var passengerQty = BigDecimal.valueOf(
+                userList.size()).add(BigDecimal.ONE);
+        var tariffTotalMap = tariffService
+                .prepareTariffTotalMap(dto.tariffDto(),
+                        passengerQty, null);
+        var tariffTotal = tariffTotalMap.get("tariffTotal");
         var distanceBetweenPorts = flight.getDistancePorts();
         if (distanceBetweenPorts == null){
             throw new IllegalArgumentException
                     ("DISTANCE FOR THE FLIGHT HAS NOT BEEN CALCULATED and/or NOT STORED IN DB");
         }
         var travelCostPerPassenger = distanceBetweenPorts
+                .multiply(distancePerPassengerCoefficient)
                 .multiply(dto.tariffDto()
                         .tariffType()
                         .getCoefficient());
-        log.info ("Tariff TOTAL = {}", tariffTotal);
-        log.info ("TravelCost = {}", travelCostPerPassenger);
-        log.info ("Distance is = {}", distanceBetweenPorts);
-        newBooking.setPrice(travelCostPerPassenger.add(tariffTotal));
-        newBooking.setTariff(populateNewTariff(dto.tariffDto()));
+        tariffTotalMap.put("travelCostPerPassenger", travelCostPerPassenger);
+
+        tariffTotal = newBooking.getInboundFlight() != null
+                ? tariffTotal.multiply(BigDecimal.TWO)
+                : tariffTotal;
+        tariffTotalMap.put("tariffTotal", tariffTotal);
+        var overall = travelCostPerPassenger.add(tariffTotal);
+        newBooking.setPrice(overall);
+        tariffTotalMap.put("overall", overall);
+        newBooking.setTariff(populateNewTariff(dto.tariffDto(), tariffTotalMap));
+
         return bookingRepository.save(newBooking);
+    }
+
+    @Transactional
+    public Map<String, BigDecimal> prepareTotalPaymentInvoice (String confirmationCode){
+        var booking = bookingRepository.findByConfirmationCode(confirmationCode).orElseThrow();
+        var tariff = booking.getTariff();
+        var passengerQty = BigDecimal.valueOf(
+                booking.getUserList().size()).add(BigDecimal.ONE);
+        var tariffDto = mapToTariffDto(tariff);
+        var map = tariffService
+                .prepareTariffTotalMap(tariffDto, passengerQty, confirmationCode);
+        tariff.setInvoiceMap(map);
+        return map;
+    }
+
+    private TariffDto mapToTariffDto(Tariff tariff) {
+        return new TariffDto(
+                tariff.getTariffType(),
+                tariff.getWizzFlex(),
+                tariff.getWizzPriority(),
+                tariff.getAutoOnlineRegistration(),
+                tariff.getAirportRegistration());
     }
 
     private boolean checkFlightsInterconnection(Flight flight, Flight inboundFlight) {
@@ -78,13 +112,14 @@ public class BookingService {
                 flight.getFrom().getIataCode().equals(inboundFlight.getTo().getIataCode());
     }
 
-    private Tariff populateNewTariff(TariffDto tariffDto) {
+    private Tariff populateNewTariff(TariffDto tariffDto, Map<String, BigDecimal> tariffTotalMap) {
         var tariff = new Tariff();
         tariff.setTariffType(tariffDto.tariffType());
         tariff.setWizzFlex(tariffDto.wizzFlex());
         tariff.setWizzPriority(tariffDto.wizzPriority());
         tariff.setAirportRegistration(tariffDto.airportRegistration());
         tariff.setAutoOnlineRegistration(tariffDto.autoOnlineRegistration());
+        tariff.setInvoiceMap(tariffTotalMap);
         tariffService.save (tariff);
         return tariff;
     }
