@@ -122,9 +122,6 @@ public class UserServiceGRPC extends UserServiceGrpc.UserServiceImplBase {
         } else {
             profile.setPhoneNumber(request.getPhoneNumber());
         }
-        if (!request.getPassword().isEmpty()) {
-            profile.setPassword(request.getPassword());
-        }
         if (!request.getStatus().name().isEmpty()) {
             user.setStatus(User.UserStatus.valueOf(request.getStatus().name()));
         }

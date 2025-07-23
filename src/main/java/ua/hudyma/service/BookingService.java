@@ -37,7 +37,13 @@ public class BookingService {
         newBooking.setConfirmationCode(IdGenerator.generateId(5));
         var mainUser = userRepository
                 .findById(dto.mainUserId()).orElseThrow();
+        var flight = flightRepository
+                .findById(dto.flightId()).orElseThrow();
+        checkDuplicateBooking(mainUser.getId(), flight.getId());
         newBooking.setMainUser(mainUser);
+        newBooking.setFlight(flight);
+        var inboundFlight = flightRepository
+                .findById(dto.inboundFlightId()).orElseThrow();
         var userList = dto.userDtoList()
                 .stream()
                 .map(user -> userRepository
@@ -46,13 +52,10 @@ public class BookingService {
                 .map(Optional::get)
                 .toList();
         newBooking.setUserList(userList);
-        var flight = flightRepository
-                .findById(dto.flightId()).orElseThrow();
-        newBooking.setFlight(flight);
-        var inboundFlight = flightRepository.findById(dto.inboundFlightId()).orElseThrow();
         if (!checkFlightsInterconnection(flight, inboundFlight)) {
             log.error("you cannot fly to/from different ports within one booking");
-            throw new FlightNotInterconnectedException("departure or destination port should be THE SAME");
+            throw new FlightNotInterconnectedException(
+                    "departure or destination port should be THE SAME");
         }
         newBooking.setInboundFlight(inboundFlight);
         var passengerQty = BigDecimal.valueOf(
@@ -85,9 +88,17 @@ public class BookingService {
         return bookingRepository.save(newBooking);
     }
 
+    public boolean checkDuplicateBooking(Long mainUserId, Long flightId) {
+        log.warn("---Duplicate BOOKING DETECTED");
+        //todo urge passenger to cancel the existing one within 24 hrs,
+        // todo otherwise the first would be canceled and refunded automatically
+        return bookingRepository.existsByMainUserIdAndFlightId(mainUserId, flightId);
+    }
+
     @Transactional
     public Map<String, BigDecimal> prepareTotalPaymentInvoice (String confirmationCode){
-        var booking = bookingRepository.findByConfirmationCode(confirmationCode).orElseThrow();
+        var booking = bookingRepository
+                .findByConfirmationCode(confirmationCode).orElseThrow();
         var tariff = booking.getTariff();
         var passengerQty = BigDecimal.valueOf(
                 booking.getUserList().size()).add(BigDecimal.ONE);

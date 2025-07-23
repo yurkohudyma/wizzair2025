@@ -10,7 +10,7 @@ import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.TariffRepository;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
@@ -36,7 +36,7 @@ public class TariffService {
             TariffDto tariffDto,
             BigDecimal passengerQty,
             String confirmationCode) {
-        var tariffMap = new HashMap<String, BigDecimal>();
+        var tariffMap = new LinkedHashMap<String, BigDecimal>();
         var tariffAmount = BigDecimal.ZERO;
         if (tariffDto.wizzFlex()){
             var amount = wizzFlexTariff.multiply(passengerQty);
@@ -65,7 +65,8 @@ public class TariffService {
         tariffMap.put("tariffAmount", tariffAmount);
         tariffMap.put("passengers Quantity", passengerQty);
         if (confirmationCode != null){
-            var booking = bookingRepository.findByConfirmationCode(confirmationCode).orElseThrow();
+            var booking = bookingRepository
+                    .findByConfirmationCode(confirmationCode).orElseThrow();
             booking.getTariff().setInvoiceMap(tariffMap);
             tariffRepository.save(booking.getTariff());
         }

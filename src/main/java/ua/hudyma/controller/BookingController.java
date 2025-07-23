@@ -20,13 +20,21 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public ResponseEntity<Booking> addBooking (@RequestBody BookingDto dto){
-        var newBooking = bookingService.addBooking (dto);
+    public ResponseEntity<Booking> addBooking(@RequestBody BookingDto dto) {
+        var newBooking = bookingService.addBooking(dto);
         return ResponseEntity.ok(newBooking);
     }
 
     @GetMapping("/invoice/{confirmationCode}")
-    public ResponseEntity<Map<String, BigDecimal>> getInvoiceMap (@PathVariable String confirmationCode){
+    public ResponseEntity<Map<String, BigDecimal>> getInvoiceMap(@PathVariable String confirmationCode) {
         return ResponseEntity.ok(bookingService.prepareTotalPaymentInvoice(confirmationCode));
+    }
+
+    @GetMapping("/{mainUserId}/{flightId}")
+    public ResponseEntity<Boolean> findDuplicateBooking(
+            @PathVariable Long mainUserId,
+            @PathVariable Long flightId) {
+        var exists = bookingService.checkDuplicateBooking(mainUserId, flightId);
+        return ResponseEntity.ok(exists);
     }
 }

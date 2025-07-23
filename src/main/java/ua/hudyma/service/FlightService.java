@@ -101,7 +101,7 @@ public class FlightService {
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
     public List<FullFlightDto> getAll() {
         var list =  flightRepository.findAll();
-        return list.stream().map(FlightMapper.INSTANCE::toDto).toList();
+        return new ArrayList<>(list.stream().map(FlightMapper.INSTANCE::toDto).toList());
     }
 
 
