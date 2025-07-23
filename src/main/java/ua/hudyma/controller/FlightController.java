@@ -5,10 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.hudyma.domain.Flight;
-import ua.hudyma.dto.FlightDistancesDto;
-import ua.hudyma.dto.FlightDto;
-import ua.hudyma.dto.FlightResponseDto;
-import ua.hudyma.dto.FullFlightDto;
+import ua.hudyma.dto.*;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.service.FlightAnalyticsService;
 import ua.hudyma.service.FlightService;
@@ -22,6 +19,12 @@ public class FlightController {
 
     private final FlightAnalyticsService flightAnalyticsService;
     private final FlightService flightService;
+
+    @PostMapping("find")
+    public ResponseEntity<FlightSearchResponseDto> findFlight (@RequestBody FlightSearchRequestDto dto){
+        return ResponseEntity.ok(flightService.findFlightForNearestDate (dto));
+    }
+
 
     @GetMapping("/top")
     public List<Flight> getTopFlights() {

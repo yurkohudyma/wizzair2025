@@ -25,7 +25,7 @@ import java.util.Optional;
 @Log4j2
 public class BookingService {
 
-    private final BigDecimal distancePerPassengerCoefficient = BigDecimal.valueOf(0.15);
+    public static final BigDecimal distancePerPassengerCoefficient = BigDecimal.valueOf(0.15);
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;

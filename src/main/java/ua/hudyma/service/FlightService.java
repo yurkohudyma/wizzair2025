@@ -3,14 +3,12 @@ package ua.hudyma.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Airplane;
 import ua.hudyma.domain.Flight;
-import ua.hudyma.dto.AirportDistanceDto;
-import ua.hudyma.dto.FlightDto;
-import ua.hudyma.dto.FlightResponseDto;
-import ua.hudyma.dto.FullFlightDto;
+import ua.hudyma.dto.*;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.mapper.FlightMapper;
 import ua.hudyma.repository.FlightRepository;
@@ -22,6 +20,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ua.hudyma.service.BookingService.distancePerPassengerCoefficient;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -29,6 +29,62 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final AirplaneService airplaneService;
     private final AirportService airportService;
+
+    public FlightSearchResponseDto findFlightForNearestDate(
+            FlightSearchRequestDto dto) {
+        var outBoundFlight = flightRepository
+                .findFlightByExactDate(
+                        dto.from(),
+                        dto.to(),
+                        dto.flightDate());
+        LocalDate outBoundDate;
+        LocalTime outBoundTime;
+        BigDecimal price;
+        String flightNumber;
+        LocalDate dateReturn = null;
+        LocalTime timeReturn = null;
+        if (outBoundFlight.isPresent()) {
+            var flight = outBoundFlight.get();
+            outBoundDate = flight.getFlightDate();
+            outBoundTime = flight.getFlightTime();
+            price = flight
+                    .getDistancePorts()
+                    .multiply(distancePerPassengerCoefficient);
+            flightNumber = flight.getFlightNumber();
+        } else {
+            //todo find nearest outbound flight
+            var nearestOutBoundFlight = flightRepository
+                    .findNearestFlight(
+                            dto.from(),
+                            dto.to(),
+                            dto.flightDate(),
+                            PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (nearestOutBoundFlight.isPresent()) {
+                var flight = nearestOutBoundFlight.get();
+                outBoundDate = flight.getFlightDate();
+                outBoundTime = flight.getFlightTime();
+                price = flight
+                        .getDistancePorts()
+                        .multiply(distancePerPassengerCoefficient);
+                flightNumber = flight.getFlightNumber();
+            } else {
+                outBoundTime = null;
+                outBoundDate = null;
+                price = null;
+                flightNumber = null;
+            }
+        }
+        return new FlightSearchResponseDto(
+                outBoundFlight.isPresent(),
+                outBoundDate,
+                outBoundTime,
+                flightNumber,
+                dateReturn,
+                timeReturn,
+                price
+        );
+    }
 
 
     @Transactional
@@ -100,7 +156,7 @@ public class FlightService {
 
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
     public List<FullFlightDto> getAll() {
-        var list =  flightRepository.findAll();
+        var list = flightRepository.findAll();
         return new ArrayList<>(list.stream().map(FlightMapper.INSTANCE::toDto).toList());
     }
 
