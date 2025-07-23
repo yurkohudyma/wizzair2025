@@ -50,7 +50,7 @@ public class TariffService {
             tariffMap.put("wizzPriorityTariff", wizzPriorityTariff);
             tariffMap.put("wizzPriorityTotal", amount);
         }
-        if (tariffDto.airportRegistration()){
+        if (tariffDto.autoOnlineRegistration()){
             var amount = onlineRegistrationTariff.multiply(passengerQty);
             tariffAmount = tariffAmount.add(amount);
             tariffMap.put("onlineRegistrationTariff", onlineRegistrationTariff);
