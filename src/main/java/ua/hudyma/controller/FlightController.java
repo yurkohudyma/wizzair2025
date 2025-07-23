@@ -22,7 +22,7 @@ public class FlightController {
 
     @PostMapping("find")
     public ResponseEntity<FlightSearchResponseDto> findFlight (@RequestBody FlightSearchRequestDto dto){
-        return ResponseEntity.ok(flightService.findFlightForNearestDate (dto));
+        return ResponseEntity.ok(flightService.findFlightForDate(dto));
     }
 
 

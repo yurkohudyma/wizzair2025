@@ -55,12 +55,6 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
             Pageable pageable
     );
 
-
-
-
-
-
-
     @Query("""
     SELECT f FROM Flight f
     WHERE f.createdOn >= :startDate

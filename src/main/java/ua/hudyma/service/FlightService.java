@@ -30,66 +30,88 @@ public class FlightService {
     private final AirplaneService airplaneService;
     private final AirportService airportService;
 
-    public FlightSearchResponseDto findFlightForNearestDate(
-            FlightSearchRequestDto dto) {
+    public FlightSearchResponseDto findFlightForDate(
+            FlightSearchRequestDto requestDto) {
+        var responseDto = new FlightSearchResponseDto();
+        if (requestDto.flightDateReturn() != null) {
+            fetchInboundFlight(requestDto, responseDto);
+        }
+        return fetchOutboundFlight(requestDto, responseDto);
+    }
+
+    private FlightSearchResponseDto fetchOutboundFlight(
+            FlightSearchRequestDto requestDto, FlightSearchResponseDto responseDto) {
         var outBoundFlight = flightRepository
                 .findFlightByExactDate(
-                        dto.from(),
-                        dto.to(),
-                        dto.flightDate());
-        LocalDate outBoundDate;
-        LocalTime outBoundTime;
-        BigDecimal price;
-        String flightNumber;
-        LocalDate dateReturn = null;
-        LocalTime timeReturn = null;
+                        requestDto.from(),
+                        requestDto.to(),
+                        requestDto.flightDate());
         if (outBoundFlight.isPresent()) {
             var flight = outBoundFlight.get();
-            outBoundDate = flight.getFlightDate();
-            outBoundTime = flight.getFlightTime();
-            price = flight
-                    .getDistancePorts()
-                    .multiply(distancePerPassengerCoefficient);
-            flightNumber = flight.getFlightNumber();
+            populateOutboundDto(responseDto, flight);
         } else {
-            //todo find nearest outbound flight
             var nearestOutBoundFlight = flightRepository
                     .findNearestFlight(
-                            dto.from(),
-                            dto.to(),
-                            dto.flightDate(),
+                            requestDto.from(),
+                            requestDto.to(),
+                            requestDto.flightDate(),
                             PageRequest.of(0, 1))
                     .stream().findFirst();
             if (nearestOutBoundFlight.isPresent()) {
                 var flight = nearestOutBoundFlight.get();
-                outBoundDate = flight.getFlightDate();
-                outBoundTime = flight.getFlightTime();
-                price = flight
-                        .getDistancePorts()
-                        .multiply(distancePerPassengerCoefficient);
-                flightNumber = flight.getFlightNumber();
-            } else {
-                outBoundTime = null;
-                outBoundDate = null;
-                price = null;
-                flightNumber = null;
+                populateOutboundDto(responseDto, flight);
             }
         }
-        return new FlightSearchResponseDto(
-                outBoundFlight.isPresent(),
-                outBoundDate,
-                outBoundTime,
-                flightNumber,
-                dateReturn,
-                timeReturn,
-                price
-        );
+        return responseDto;
     }
 
+    private void populateOutboundDto(FlightSearchResponseDto responseDto,
+                                     Flight flight) {
+        responseDto.setDate(flight.getFlightDate());
+        responseDto.setTime(flight.getFlightTime());
+        responseDto.setPrice(flight.getDistancePorts()
+                .multiply(distancePerPassengerCoefficient));
+        responseDto.setFlightNumber(flight.getFlightNumber());
+        responseDto.setOutBoundExistsExact(true);
+    }
+
+    private void populateInboundDto(FlightSearchResponseDto responseDto,
+                                    Flight flight) {
+        responseDto.setDateReturn(flight.getFlightDate());
+        responseDto.setTimeReturn(flight.getFlightTime());
+        responseDto.setPriceReturn(flight.getDistancePorts()
+                .multiply(distancePerPassengerCoefficient));
+        responseDto.setReturnFlightNumber(flight.getFlightNumber());
+        responseDto.setInBoundExistsExact(true);
+    }
+
+    private void fetchInboundFlight(FlightSearchRequestDto dto,
+                                    FlightSearchResponseDto responseDto) {
+        var inBoundFlight = flightRepository
+                .findFlightByExactDate(
+                        dto.to(),
+                        dto.from(),
+                        dto.flightDateReturn());
+        if (inBoundFlight.isPresent()) {
+            var flight = inBoundFlight.get();
+            populateInboundDto(responseDto, flight);
+        } else {
+            var nearestInboundFlight = flightRepository
+                    .findNearestFlight(
+                            dto.to(),
+                            dto.from(),
+                            dto.flightDateReturn(),
+                            PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (nearestInboundFlight.isPresent()) {
+                var flight = nearestInboundFlight.get();
+                populateInboundDto(responseDto, flight);
+            }
+        }
+    }
 
     @Transactional
     public List<Flight> recalculateMissingDistancesForFlights() {
-
         return flightRepository.findAll().stream()
                 .filter(flight -> flight.getDistancePorts() == null)
                 .map(flight -> {
@@ -100,7 +122,6 @@ public class FlightService {
                 })
                 .toList();
     }
-
 
     public List<FlightResponseDto> addAll(FlightDto[] dtos) throws InvalidAirportException {
         var list = new ArrayList<Flight>();
