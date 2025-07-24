@@ -29,8 +29,7 @@ public class Booking {
     @JoinTable(
             name = "user_booking",
             joinColumns = @JoinColumn(name = "booking_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore
     private List<User> userList = new ArrayList<>();
 

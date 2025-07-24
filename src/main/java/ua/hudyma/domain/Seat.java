@@ -1,19 +1,29 @@
 package ua.hudyma.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "seats")
 @Data
+@Builder
 public class Seat {
 
     @Id
     @GeneratedValue(
             strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    @CreationTimestamp
+    private Date checkin;
 
     @ManyToOne
     @JoinColumn(name = "seat_selection_id")
