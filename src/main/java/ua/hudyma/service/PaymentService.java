@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Payment;
 import ua.hudyma.dto.EffectPaymentDto;
+import ua.hudyma.dto.PaymentDTO;
 import ua.hudyma.exception.InvalidTopUpException;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.PaymentRepository;

@@ -1,4 +1,4 @@
-package ua.hudyma.service;
+package ua.hudyma.dto;
 
 import ua.hudyma.domain.Payment;
 import ua.hudyma.domain.Payment.PaymentStatus;

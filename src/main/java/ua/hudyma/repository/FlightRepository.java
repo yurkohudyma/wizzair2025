@@ -24,6 +24,8 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
     """, nativeQuery = true)
     List<FlightDistancesDto> findAllDistancesBetweenPorts();
 
+    Optional<Flight> findByFlightNumber(String flightNumber);
+
     @Query("""
     SELECT f
     FROM Flight f

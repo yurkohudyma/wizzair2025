@@ -33,6 +33,9 @@ public class Flight {
     @ManyToOne
     @JoinColumn(name = "airplane_id", nullable = false)
     private Airplane airplane;
+    @OneToOne
+    @JoinColumn(name = "seat_selection_id")
+    private SeatSelection seatSelection;
     @JsonFormat(pattern = "dd-MM-yyyy")
     @CreationTimestamp
     private Date createdOn;

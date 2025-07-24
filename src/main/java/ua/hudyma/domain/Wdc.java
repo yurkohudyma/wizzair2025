@@ -9,7 +9,7 @@ import lombok.Data;
 @Entity
 @Table(name = "wdc")
 @Data
-public class WizzairDiscountClub {
+public class Wdc {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

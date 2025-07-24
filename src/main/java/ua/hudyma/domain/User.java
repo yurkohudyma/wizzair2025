@@ -28,7 +28,7 @@ public class User {
     @OneToOne(mappedBy = "user",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
-    private WizzairDiscountClub account;
+    private Wdc account;
     @NotNull
     @Positive
     private BigDecimal balance = BigDecimal.ZERO;

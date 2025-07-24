@@ -21,10 +21,15 @@ public class FlightAnalyticsService {
 
     private List<Flight> loadTopFlightsFromDb() {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return flightRepository.findTopFlightsFromDate(sevenDaysAgo, PageRequest.of(0, 10));
+        return flightRepository
+                .findTopFlightsFromDate(sevenDaysAgo,
+                        PageRequest.of(0, 10));
     }
 
-    @Cacheable(value = "topFlights", key = "'weekly'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(
+            value = "topFlights",
+            key = "'weekly'",
+            unless = "#result == null || #result.isEmpty()")
     public List<Flight> getTopFlightsLast7Days() {
         return loadTopFlightsFromDb();
     }

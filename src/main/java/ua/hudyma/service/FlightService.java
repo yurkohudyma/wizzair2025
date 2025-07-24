@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Airplane;
 import ua.hudyma.domain.Flight;
+import ua.hudyma.domain.SeatSelection;
 import ua.hudyma.dto.*;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.mapper.FlightMapper;
@@ -29,6 +30,11 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final AirplaneService airplaneService;
     private final AirportService airportService;
+    private final SeatSelectionService seatSelectionService;
+
+    public Flight findFlightByFlightNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber).orElseThrow();
+    }
 
     public FlightSearchResponseDto findFlightForDate(
             FlightSearchRequestDto requestDto) {
@@ -49,6 +55,7 @@ public class FlightService {
         if (outBoundFlight.isPresent()) {
             var flight = outBoundFlight.get();
             populateOutboundDto(responseDto, flight);
+            responseDto.setOutBoundExistsExact(true);
         } else {
             var nearestOutBoundFlight = flightRepository
                     .findNearestFlight(
@@ -72,7 +79,6 @@ public class FlightService {
         responseDto.setPrice(flight.getDistancePorts()
                 .multiply(distancePerPassengerCoefficient));
         responseDto.setFlightNumber(flight.getFlightNumber());
-        responseDto.setOutBoundExistsExact(true);
     }
 
     private void populateInboundDto(FlightSearchResponseDto responseDto,
@@ -82,7 +88,7 @@ public class FlightService {
         responseDto.setPriceReturn(flight.getDistancePorts()
                 .multiply(distancePerPassengerCoefficient));
         responseDto.setReturnFlightNumber(flight.getFlightNumber());
-        responseDto.setInBoundExistsExact(true);
+
     }
 
     private void fetchInboundFlight(FlightSearchRequestDto dto,
@@ -95,6 +101,7 @@ public class FlightService {
         if (inBoundFlight.isPresent()) {
             var flight = inBoundFlight.get();
             populateInboundDto(responseDto, flight);
+            responseDto.setInBoundExistsExact(true);
         } else {
             var nearestInboundFlight = flightRepository
                     .findNearestFlight(
@@ -140,6 +147,10 @@ public class FlightService {
             flight.setFlightNumber(generateFlightNumber());
             flight.setFlightDate(generateDate());
             flight.setFlightTime(generateTime());
+
+            var seatSelection = new SeatSelection();
+            seatSelectionService.save(seatSelection);
+            flight.setSeatSelection(seatSelection);
 
             var airplane = airplaneService.getByType(
                     Airplane.AirplaneType.valueOf(flightDto.planeType()));

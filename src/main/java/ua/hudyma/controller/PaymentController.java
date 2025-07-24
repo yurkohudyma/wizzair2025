@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.hudyma.dto.EffectPaymentDto;
-import ua.hudyma.service.PaymentDTO;
+import ua.hudyma.dto.PaymentDTO;
 import ua.hudyma.service.PaymentService;
 
 @RestController
