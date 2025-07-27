@@ -1,3 +1,4 @@
+
 package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,9 @@ import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.SeatRepository;
 import ua.hudyma.repository.SeatSelectionRepository;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final BookingRepository bookingRepository;
     private final SeatSelectionRepository seatSelectionRepository;
+    private final SeatSelectionService seatSelectionService;
 
     @Transactional
     public List<Seat> checkinUsers(CheckinRequestDto dto) {
@@ -36,19 +40,34 @@ public class SeatService {
         var seatSelectionMap = dto.seatSelection();
         var userList = booking.getUserList();
 
-        SeatSelection finalSelection = selection;
+        var finalSelection = selection;
+        var flightSeatsMap = seatSelectionService
+                .getSeatMap(flight.getFlightNumber());
+        var flightSeatList = Arrays
+                .stream(flightSeatsMap)
+                .flatMap(Arrays::stream)
+                .toList();
+
         var seatList = userList.stream()
                 .map(user -> {
-                    String seatCode = seatSelectionMap.get(user.getId().toString());
+                    String seatNumber = seatSelectionMap.get(user.getId().toString());
+                    if (!flightSeatList.contains(seatNumber)) {
+                        log.error ("No seatnumber {} exists in plane {}",
+                                seatNumber, flight.getAirplane().getType().name());
+                        return null;
+                    }
                     return Seat.builder()
-                            .seatNumber(seatCode)
+                            .seatNumber(seatNumber)
                             .seatType(Seat.SeatType.STANDARD)
                             .seatSelection(finalSelection)
+                            .userId(user.getUserId())
                             .build();
                 })
+                .filter(Objects::nonNull)
                 .toList();
-        //todo append reserved seat to some storage
-        //todo othewise you shall check available seat every now and then
+        //todo check for already checkined pax
+        //todo check for already checkined seats
+        //todo control for existing seat numbers entered
         return seatRepository.saveAll(seatList);
     }
 }

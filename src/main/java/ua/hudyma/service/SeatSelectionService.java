@@ -12,7 +12,6 @@ import ua.hudyma.repository.SeatSelectionRepository;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-
 public class SeatSelectionService {
 
     private final SeatSelectionRepository seatSelectionRepository;
@@ -46,7 +45,6 @@ public class SeatSelectionService {
         }
         throw new IllegalArgumentException("airplane is NULL");
     }
-
 
     public void save(SeatSelection seatSelection) {
         seatSelectionRepository.save(seatSelection);

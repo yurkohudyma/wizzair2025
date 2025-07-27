@@ -15,7 +15,6 @@ import java.util.Date;
 @Data
 @Builder
 public class Seat {
-
     @Id
     @GeneratedValue(
             strategy = GenerationType.IDENTITY)
@@ -44,5 +43,9 @@ public class Seat {
             return priceCoefficient;
         }
     }
+    @Column(unique = true,
+            nullable = false)
     private String seatNumber;
+
+    String userId;
 }

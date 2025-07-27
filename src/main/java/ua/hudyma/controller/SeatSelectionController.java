@@ -20,9 +20,13 @@ public class SeatSelectionController {
     private final SeatSelectionService seatSelectionService;
 
     @GetMapping("/{flightNumber}")
-    public ResponseEntity<List<List<String>>> getSeatSelectionMap (@PathVariable String flightNumber){
-        var map = seatSelectionService.getSeatMap (flightNumber);
-        var list = Arrays.stream(map).map(Arrays::asList).toList();
+    public ResponseEntity<List<List<String>>> getSeatSelectionMap (
+            @PathVariable String flightNumber){
+        var map = seatSelectionService
+                .getSeatMap (flightNumber);
+        var list = Arrays
+                .stream(map)
+                .map(Arrays::asList).toList();
         return ResponseEntity.ok(list);
     }
 }
