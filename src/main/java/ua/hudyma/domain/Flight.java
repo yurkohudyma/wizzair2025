@@ -24,18 +24,6 @@ public class Flight {
     private Long id;
     @Column(unique = true, nullable = false)
     private String flightNumber;
-    @ManyToOne
-    @JoinColumn(name = "from_airport_id", nullable = false)
-    private Airport from;
-    @ManyToOne
-    @JoinColumn(name = "to_airport_id", nullable = false)
-    private Airport to;
-    @ManyToOne
-    @JoinColumn(name = "airplane_id", nullable = false)
-    private Airplane airplane;
-    @OneToOne
-    @JoinColumn(name = "seat_selection_id")
-    private SeatSelection seatSelection;
     @JsonFormat(pattern = "dd-MM-yyyy")
     @CreationTimestamp
     private Date createdOn;
@@ -55,4 +43,16 @@ public class Flight {
     @OneToMany(mappedBy = "inboundFlight")
     @JsonIgnore
     private List<Booking> inboundBookings;
+    @ManyToOne
+    @JoinColumn(name = "from_airport_id", nullable = false)
+    private Airport from;
+    @ManyToOne
+    @JoinColumn(name = "to_airport_id", nullable = false)
+    private Airport to;
+    @ManyToOne
+    @JoinColumn(name = "airplane_id", nullable = false)
+    private Airplane airplane;
+    @OneToMany(mappedBy = "flight",
+            cascade = CascadeType.ALL)
+    private List<Seat> seatList;
 }

@@ -1,3 +1,4 @@
+/*
 package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
@@ -50,3 +51,4 @@ public class SeatSelectionService {
         seatSelectionRepository.save(seatSelection);
     }
 }
+*/

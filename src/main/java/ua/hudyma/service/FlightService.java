@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Airplane;
 import ua.hudyma.domain.Flight;
-import ua.hudyma.domain.SeatSelection;
 import ua.hudyma.dto.*;
 import ua.hudyma.exception.InvalidAirportException;
 import ua.hudyma.mapper.FlightMapper;
@@ -30,7 +29,6 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final AirplaneService airplaneService;
     private final AirportService airportService;
-    private final SeatSelectionService seatSelectionService;
 
     public Flight findFlightByFlightNumber(String flightNumber) {
         return flightRepository.findByFlightNumber(flightNumber).orElseThrow();
@@ -148,9 +146,9 @@ public class FlightService {
             flight.setFlightDate(generateDate());
             flight.setFlightTime(generateTime());
 
-            var seatSelection = new SeatSelection();
+            /*var seatSelection = new SeatSelection();
             seatSelectionService.save(seatSelection);
-            flight.setSeatSelection(seatSelection);
+            flight.setSeatSelection(seatSelection);*/
 
             var airplane = airplaneService.getByType(
                     Airplane.AirplaneType.valueOf(flightDto.planeType()));
@@ -207,4 +205,24 @@ public class FlightService {
         int minute = new SecureRandom().nextInt(60);
         return LocalTime.of(hour, minute);
     }
+
+    /*@Transactional
+    public void provideFlightsWithSeatSelectionWhenMissing() {
+        var flightsToUpdate = flightRepository
+                .findAll()
+                .stream()
+                .filter(flight ->
+                        flight.getSeatSelection() == null)
+                .toList();
+
+        for (Flight flight : flightsToUpdate) {
+            var seatSelection = new SeatSelection();
+            seatSelectionService.save(seatSelection);
+            flight.setSeatSelection(seatSelection);
+        }
+        flightRepository.saveAll(flightsToUpdate);
+    }*/
+
+
+
 }

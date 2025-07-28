@@ -3,9 +3,7 @@ package ua.hudyma.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
@@ -14,7 +12,10 @@ import java.util.Date;
 @Table(name = "seats")
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Seat {
+
     @Id
     @GeneratedValue(
             strategy = GenerationType.IDENTITY)
@@ -25,9 +26,9 @@ public class Seat {
     private Date checkin;
 
     @ManyToOne
-    @JoinColumn(name = "seat_selection_id")
+    @JoinColumn(name = "flight_id")
     @JsonBackReference
-    private SeatSelection seatSelection;
+    private Flight flight;
 
     @Enumerated(value = EnumType.STRING)
     SeatType seatType;

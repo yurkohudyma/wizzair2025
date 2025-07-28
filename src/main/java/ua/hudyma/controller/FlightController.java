@@ -59,5 +59,10 @@ public class FlightController {
     public List<FullFlightDto> getAllPlanes() {
         return flightService.getAll();
     }
+
+    /*@GetMapping("/provideWithSeatSelection")
+    public void provideWithSelections (){
+        flightService.provideFlightsWithSeatSelectionWhenMissing();
+    }*/
 }
 
