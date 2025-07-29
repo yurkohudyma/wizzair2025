@@ -10,7 +10,8 @@ import ua.hudyma.dto.FullFlightDto;
 @Mapper
 public interface FlightMapper {
 
-    FlightMapper INSTANCE = Mappers.getMapper(FlightMapper.class);
+    FlightMapper INSTANCE = Mappers.getMapper(
+            FlightMapper.class);
 
     FullFlightDto toDto(Flight flight);
 

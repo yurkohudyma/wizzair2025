@@ -18,6 +18,7 @@ import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.SeatRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -33,6 +34,9 @@ public class SeatService {
     @Value("${wizz.seat_stats.distancePerPaxCoeff}")
     public BigDecimal distancePerPassengerCoefficient;
 
+    @Value("${wizz.checkin.closure_time}")
+    public Integer hrsBeforeCheckInClosed;
+
 
     @Transactional
     public List<Seat> checkInPassengers(CheckinRequestDto dto) {
@@ -41,6 +45,14 @@ public class SeatService {
                 .findByConfirmationCode(confirmationCode)
                 .orElseThrow();
         var flight = booking.getFlight();
+        var flightDateTime = LocalDateTime
+                .of(flight.getFlightDate(), flight.getFlightTime());
+        var checkInDeadline = LocalDateTime
+                .now().minusHours(hrsBeforeCheckInClosed);
+        if (flightDateTime.isBefore(checkInDeadline)) {
+            log.error("Boarding is complete, checkin is void");
+            return Collections.emptyList();
+        }
         var mainPassenger = booking.getMainUser();
         var passengersList = booking.getUserList();
         passengersList.add(mainPassenger);
@@ -58,11 +70,13 @@ public class SeatService {
         } else {
             var freeSeats = flight.getFreeSeats();
             if (freeSeats == null){
-                log.error("free seats number for flight {} is not initialised", flight.getFlightNumber());
+                log.error("free seats number for flight {} is not initialised",
+                        flight.getFlightNumber());
                 return Collections.emptyList();
             }
             if (freeSeats < passengersToCheckIn.size()){
-                log.error("flight {} contains only {} free seats, proceed with OVERBOOKING",
+                log.error("flight {} contains only {} free seats, " +
+                                "proceed with OVERBOOKING",
                         flight.getFlightNumber(), freeSeats);
                 return Collections.emptyList();
             }
@@ -87,7 +101,7 @@ public class SeatService {
                         }
                         return Seat.builder()
                                 .seatNumber(seatNumber)
-                                .seatType(SeatType.STANDARD) //request type from dto, if null - set STD
+                                .seatType(SeatType.STANDARD) //todo request type from dto, if null - set STD
                                 .flight(flight)
                                 .userId(passenger.getUserId())
                                 .build();

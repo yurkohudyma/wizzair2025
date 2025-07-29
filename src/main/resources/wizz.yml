@@ -9,3 +9,5 @@ wizz:
     fee: 13
   seat_stats:
     distancePerPaxCoeff: 0.15
+  checkin:
+    closure_time: 3

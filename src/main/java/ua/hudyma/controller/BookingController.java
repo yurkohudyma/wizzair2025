@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.hudyma.domain.Booking;
 import ua.hudyma.dto.BookingDto;
+import ua.hudyma.dto.BookingResponseDto;
 import ua.hudyma.dto.PaxResponseDto;
 import ua.hudyma.service.BookingService;
 import ua.hudyma.service.UserService;
@@ -21,6 +22,13 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final UserService userService;
+
+    @GetMapping("/{confirmationCode}")
+    public ResponseEntity<BookingResponseDto> getBooking (
+            @PathVariable String confirmationCode){
+        return ResponseEntity.ok(
+                bookingService.getBooking(confirmationCode));
+    }
 
     @PostMapping
     public ResponseEntity<Booking> addBooking(@RequestBody BookingDto dto) {

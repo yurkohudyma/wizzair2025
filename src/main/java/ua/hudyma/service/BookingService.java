@@ -10,9 +10,11 @@ import ua.hudyma.domain.Booking.BookingStatus;
 import ua.hudyma.domain.Flight;
 import ua.hudyma.domain.Tariff;
 import ua.hudyma.dto.BookingDto;
+import ua.hudyma.dto.BookingResponseDto;
 import ua.hudyma.dto.TariffDto;
 import ua.hudyma.exception.FlightNotInterconnectedException;
 import ua.hudyma.exception.FreeSeatsDistributionException;
+import ua.hudyma.mapper.BookingMapper;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.UserRepository;
@@ -20,6 +22,7 @@ import ua.hudyma.util.IdGenerator;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -112,8 +115,20 @@ public class BookingService {
     public boolean checkDuplicateBooking(Long mainUserId, Long flightId) {
         log.warn("---Duplicate BOOKING DETECTED");
         //todo urge passenger to cancel the existing one within 24 hrs,
-        // todo otherwise the first would be canceled and refunded automatically
+        // otherwise the first would be canceled and refunded automatically
         return bookingRepository.existsByMainUserIdAndFlightId(mainUserId, flightId);
+    }
+
+    public BookingResponseDto getBooking(String confirmationCode) {
+        /*var booking = bookingRepository
+                .findByConfirmationCode(confirmationCode);*/
+        var booking = bookingRepository
+                .findByConfirmationCodeWithUsers(confirmationCode);
+        if (booking.isPresent()){
+            return BookingMapper.INSTANCE.toDto(booking.get());
+        }
+        throw new NoSuchElementException("booking " + confirmationCode
+                + " not found");
     }
 
     @Transactional
