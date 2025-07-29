@@ -3,6 +3,7 @@ package ua.hudyma.domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -55,4 +56,7 @@ public class Flight {
     @OneToMany(mappedBy = "flight",
             cascade = CascadeType.ALL)
     private List<Seat> seatList;
+
+    @Positive
+    Integer freeSeats;
 }

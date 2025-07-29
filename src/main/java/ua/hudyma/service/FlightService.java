@@ -2,6 +2,7 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -20,8 +21,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ua.hudyma.service.BookingService.distancePerPassengerCoefficient;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -29,6 +28,9 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final AirplaneService airplaneService;
     private final AirportService airportService;
+
+    @Value("${wizz.seat_stats.distancePerPaxCoeff}")
+    public BigDecimal distancePerPassengerCoefficient;
 
     public Flight findFlightByFlightNumber(String flightNumber) {
         return flightRepository.findByFlightNumber(flightNumber).orElseThrow();

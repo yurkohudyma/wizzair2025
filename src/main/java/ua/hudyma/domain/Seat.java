@@ -44,8 +44,7 @@ public class Seat {
             return priceCoefficient;
         }
     }
-    @Column(unique = true,
-            nullable = false)
+    @Column(nullable = false)
     private String seatNumber;
 
     String userId;

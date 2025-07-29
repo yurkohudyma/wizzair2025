@@ -2,6 +2,7 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Booking;
@@ -11,6 +12,7 @@ import ua.hudyma.domain.Tariff;
 import ua.hudyma.dto.BookingDto;
 import ua.hudyma.dto.TariffDto;
 import ua.hudyma.exception.FlightNotInterconnectedException;
+import ua.hudyma.exception.FreeSeatsDistributionException;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.UserRepository;
@@ -25,7 +27,8 @@ import java.util.Optional;
 @Log4j2
 public class BookingService {
 
-    public static final BigDecimal distancePerPassengerCoefficient = BigDecimal.valueOf(0.15);
+    @Value("${wizz.seat_stats.distancePerPaxCoeff}")
+    public BigDecimal distancePerPassengerCoefficient;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
@@ -41,7 +44,21 @@ public class BookingService {
                 .findById(dto.flightId()).orElseThrow();
         checkDuplicateBooking(mainUser.getId(), flight.getId());
         newBooking.setMainUser(mainUser);
-        newBooking.setFlight(flight);
+        var allPassengersNumber = dto.userDtoList().size() + 1;
+
+        var freeSeats = flight.getFreeSeats();
+        if (freeSeats == null){
+            log.error("free seats number for flight {} is not initialised",
+                    flight.getFlightNumber());
+            throw new FreeSeatsDistributionException("" +
+                    "free seats NOT initialised, cannot issue booking");
+        }
+        else if (freeSeats < allPassengersNumber){
+            log.error("flight {} contains only {} free seats, requested {}, cannot proceed",
+                    flight.getFlightNumber(), allPassengersNumber,freeSeats);
+            throw new FreeSeatsDistributionException("free seats NOT initialised, cannot issue booking");
+        }
+
         var inboundFlight = flightRepository
                 .findById(dto.inboundFlightId()).orElseThrow();
         var userList = dto.userDtoList()
@@ -84,6 +101,10 @@ public class BookingService {
         newBooking.setPrice(overall);
         tariffTotalMap.put("overall", overall);
         newBooking.setTariff(populateNewTariff(dto.tariffDto(), tariffTotalMap));
+
+        flight.setFreeSeats(allPassengersNumber);
+        newBooking.setFlight(flight);
+        //todo introduce analogous free seats procedure for inbound flight
 
         return bookingRepository.save(newBooking);
     }

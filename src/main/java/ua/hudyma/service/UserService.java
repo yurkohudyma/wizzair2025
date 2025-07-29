@@ -7,11 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Address;
 import ua.hudyma.domain.User;
+import ua.hudyma.dto.PaxResponseDto;
 import ua.hudyma.dto.UserDto;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.UserRepository;
-
-import java.util.List;
 
 import static ua.hudyma.util.IdGenerator.generateId;
 
@@ -33,16 +32,19 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> getPax(String confirmCode) {
+    public PaxResponseDto getPax(String confirmCode) {
         var booking = bookingRepository
                 .findByConfirmationCode(confirmCode)
                 .orElseThrow();
         var mainUser = booking.getMainUser();
         var userList = booking.getUserList();
-        return userList.stream()
+        var list = userList.stream()
                 .map(
                 user -> new UserDto(user.getId()))
                 .toList();
+        return new PaxResponseDto(
+                new UserDto(mainUser.getId()),
+                list);
     }
 
 

@@ -6,12 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.hudyma.domain.Booking;
 import ua.hudyma.dto.BookingDto;
-import ua.hudyma.dto.UserDto;
+import ua.hudyma.dto.PaxResponseDto;
 import ua.hudyma.service.BookingService;
 import ua.hudyma.service.UserService;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -46,7 +45,7 @@ public class BookingController {
     }
 
     @GetMapping("/passengers/{confirmCode}")
-    public ResponseEntity<List<UserDto>> getPassengerList (
+    public ResponseEntity<PaxResponseDto> getPassengerList (
             @PathVariable String confirmCode){
         return ResponseEntity.ok(userService.getPax(confirmCode));
     }

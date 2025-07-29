@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.hudyma.domain.Seat;
 import ua.hudyma.dto.CheckinRequestDto;
+import ua.hudyma.dto.SeatStatsResponseDto;
 import ua.hudyma.service.SeatService;
 
 import java.util.List;
@@ -25,11 +26,18 @@ public class SeatController {
                 .checkInPassengers(dto));
     }
 
-     @GetMapping("/getSeatMap/{flightNumber}")
-    public ResponseEntity<List<String>> getSeatSelectionMap (
+    @GetMapping("/getSeatMap/{flightNumber}")
+    public ResponseEntity<List<List<String>>> getSeatSelectionMap (
             @PathVariable String flightNumber){
         var map = seatService
-                .getSeatMap (flightNumber);
+                .getSeatMapEnclosed (flightNumber);
         return ResponseEntity.ok(map);
+    }
+
+    @GetMapping("/stats/{flightNumber}")
+    public ResponseEntity<SeatStatsResponseDto> getSeatStats (
+            @PathVariable String flightNumber){
+        return ResponseEntity.ok(seatService
+                .getStats(flightNumber));
     }
 }

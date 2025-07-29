@@ -7,3 +7,5 @@ wizz:
     tariff: 1.5
   airport_registration:
     fee: 13
+  seat_stats:
+    distancePerPaxCoeff: 0.15
