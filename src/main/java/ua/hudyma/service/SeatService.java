@@ -33,10 +33,8 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final BookingRepository bookingRepository;
     private final FlightRepository flightRepository;
-
     @Value("${wizz.seat_stats.distancePerPaxCoeff}")
     public BigDecimal distancePerPassengerCoefficient;
-
     @Value("${wizz.checkin.closure_time}")
     public Integer hrsBeforeCheckInClosed;
 
@@ -53,12 +51,10 @@ public class SeatService {
         var checkInDeadline = LocalDateTime
                 .now().minusHours(hrsBeforeCheckInClosed);
         if (flightDateTime.isBefore(checkInDeadline)) {
-            log.error("Boarding is complete, checkin is void");
+            log.error("Boarding is complete, check-in is void");
             return Collections.emptyList();
         }
-        //var mainPassenger = booking.getMainUser();
         var passengersList = booking.getUserList();
-        //passengersList.add(mainPassenger);
         var seatList = flight.getSeatList();
         var requestedSeatMap = dto.seatSelection();
         List<Seat> newSeatsList;
@@ -66,24 +62,16 @@ public class SeatService {
                 .stream()
                 .filter(isPassengerNotCheckedIn(seatList))
                 .toList();
-        /*boolean mainPaxIsNotCheckedIn = isPassengerNotCheckedIn(seatList)
-                .test(mainPassenger);*/
-        //todo either adjust all DB data along with mainPax is included in PAX_LIST i.e. remove ambigous bookings
-        if (passengersToCheckIn.isEmpty() /*&& !mainPaxIsNotCheckedIn*/) {
+
+        if (passengersToCheckIn.isEmpty()) {
             log.warn("All users in booking {} already checked in",
                     confirmationCode);
             booking.setBookingStatus(BookingStatus.CHECKED_IN);
             return Collections.emptyList();
-        } /*else if (mainPaxIsNotCheckedIn) {
+
+        } else {
             var freeSeatsAreAvailable = proceedWithFreeSeatsProcedure(
-                    flight, List.of(mainPassenger));
-            if (!freeSeatsAreAvailable) {
-                return Collections.emptyList();
-            }
-            newSeatsList = getNewSeatList(flight, requestedSeatMap, List.of(mainPassenger));
-            flight.setFreeSeats(getFreeSeats(flight) - newSeatsList.size());
-        }*/ else {
-            var freeSeatsAreAvailable = proceedWithFreeSeatsProcedure(flight, passengersToCheckIn);
+                    flight, passengersToCheckIn);
             if (!freeSeatsAreAvailable) {
                 return Collections.emptyList();
             }
@@ -99,28 +87,26 @@ public class SeatService {
             newSeatsList = getNewSeatList(flight, requestedSeatMap, passengersToCheckIn);
             flight.setFreeSeats(getFreeSeats(flight) - newSeatsList.size());
         }
+        booking.setBookingStatus(BookingStatus.CHECKED_IN);
         return seatRepository.saveAll(newSeatsList);
     }
 
-
-    @Transactional
-    private boolean proceedWithFreeSeatsProcedure (Flight flight, List<User> passengersToCheckIn) {
+    private boolean proceedWithFreeSeatsProcedure(
+            Flight flight, List<User> passengersToCheckIn) {
         Integer freeSeats = getFreeSeats(flight);
-        if (freeSeats < passengersToCheckIn.size()){
+        if (freeSeats < passengersToCheckIn.size()) {
             log.error("flight {} contains only {} free seats, " +
                             "proceed with OVERBOOKING",
                     flight.getFlightNumber(), freeSeats);
             return false;
         }
-
         return true;
     }
 
     @NotNull
-    @Transactional
     private static Integer getFreeSeats(Flight flight) {
         var freeSeats = flight.getFreeSeats();
-        if (freeSeats == null){
+        if (freeSeats == null) {
             log.error("free seats number for flight {} has been initialised",
                     flight.getFlightNumber());
             freeSeats = flight.getAirplane().getType().getSeatsQuantity();
@@ -129,9 +115,8 @@ public class SeatService {
     }
 
     @NotNull
-    @Transactional
-    private List<Seat> getNewSeatList(Flight flight, 
-                                      Map<String, String> requestedSeatMap, 
+    private List<Seat> getNewSeatList(Flight flight,
+                                      Map<String, String> requestedSeatMap,
                                       List<User> passengersToCheckIn) {
         var flightSeatMap = getSeatMap(flight.getFlightNumber());
         List<Seat> newSeatsList;
@@ -158,7 +143,6 @@ public class SeatService {
     }
 
     @NotNull
-    @Transactional
     private SeatType verifyRowType(Flight flight, String seatNumber) {
         if (seatNumber == null || seatNumber.length() < 2) {
             throw new IllegalArgumentException("Invalid seat number: " + seatNumber);
@@ -166,7 +150,7 @@ public class SeatService {
         var premiumPlaneRows = flight.getAirplane().getType().getExitRows();
         var seatDigit = Integer.parseInt(
                 seatNumber.substring(0, seatNumber.length() - 1));
-        for (int row : premiumPlaneRows){
+        for (int row : premiumPlaneRows) {
             if (row == seatDigit) {
                 return SeatType.EXIT;
             }
@@ -174,7 +158,10 @@ public class SeatService {
         return SeatType.STANDARD;
     }
 
-    @Transactional
+    /**
+     * Gives stats on flight's occupied seats.
+     * Recalculates occupied seats for a flight, persists to db
+     */
     public SeatStatsResponseDto getStats(String flightNumber) {
         var flight = flightRepository
                 .findByFlightNumber(flightNumber).orElseThrow();
@@ -188,10 +175,11 @@ public class SeatService {
                 .getDistancePorts();
         var freeSeats = seatsCapacity - occupiedSeatsNumber;
         flight.setFreeSeats(freeSeats);
+        flightRepository.save(flight);
         var total = new BigDecimal(0);
-        for (Seat seat : occupiedSeatsList){
+        for (Seat seat : occupiedSeatsList) {
             var price = BigDecimal.valueOf(
-                    seat.getSeatType().getPriceCoefficient())
+                            seat.getSeatType().getPriceCoefficient())
                     .multiply(distanceBetweenPorts)
                     .multiply(distancePerPassengerCoefficient);
             total = total.add(price);
