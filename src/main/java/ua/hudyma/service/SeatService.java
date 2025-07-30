@@ -4,10 +4,13 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Airplane.AirplaneType;
+import ua.hudyma.domain.Booking.BookingStatus;
+import ua.hudyma.domain.Flight;
 import ua.hudyma.domain.Seat;
 import ua.hudyma.domain.Seat.SeatType;
 import ua.hudyma.domain.User;
@@ -53,9 +56,9 @@ public class SeatService {
             log.error("Boarding is complete, checkin is void");
             return Collections.emptyList();
         }
-        var mainPassenger = booking.getMainUser();
+        //var mainPassenger = booking.getMainUser();
         var passengersList = booking.getUserList();
-        passengersList.add(mainPassenger);
+        //passengersList.add(mainPassenger);
         var seatList = flight.getSeatList();
         var requestedSeatMap = dto.seatSelection();
         List<Seat> newSeatsList;
@@ -63,54 +66,112 @@ public class SeatService {
                 .stream()
                 .filter(isPassengerNotCheckedIn(seatList))
                 .toList();
-        if (passengersToCheckIn.isEmpty()) {
+        /*boolean mainPaxIsNotCheckedIn = isPassengerNotCheckedIn(seatList)
+                .test(mainPassenger);*/
+        //todo either adjust all DB data along with mainPax is included in PAX_LIST i.e. remove ambigous bookings
+        if (passengersToCheckIn.isEmpty() /*&& !mainPaxIsNotCheckedIn*/) {
             log.warn("All users in booking {} already checked in",
                     confirmationCode);
+            booking.setBookingStatus(BookingStatus.CHECKED_IN);
             return Collections.emptyList();
-        } else {
-            var freeSeats = flight.getFreeSeats();
-            if (freeSeats == null){
-                log.error("free seats number for flight {} is not initialised",
-                        flight.getFlightNumber());
+        } /*else if (mainPaxIsNotCheckedIn) {
+            var freeSeatsAreAvailable = proceedWithFreeSeatsProcedure(
+                    flight, List.of(mainPassenger));
+            if (!freeSeatsAreAvailable) {
                 return Collections.emptyList();
             }
-            if (freeSeats < passengersToCheckIn.size()){
-                log.error("flight {} contains only {} free seats, " +
-                                "proceed with OVERBOOKING",
-                        flight.getFlightNumber(), freeSeats);
+            newSeatsList = getNewSeatList(flight, requestedSeatMap, List.of(mainPassenger));
+            flight.setFreeSeats(getFreeSeats(flight) - newSeatsList.size());
+        }*/ else {
+            var freeSeatsAreAvailable = proceedWithFreeSeatsProcedure(flight, passengersToCheckIn);
+            if (!freeSeatsAreAvailable) {
                 return Collections.emptyList();
             }
             var checkedInPassengers = new ArrayList<>(passengersList);
             checkedInPassengers.removeAll(passengersToCheckIn);
+
             if (!checkedInPassengers.isEmpty()) {
                 checkedInPassengers.forEach(passenger ->
                         log.warn("User {} already checked in for booking {}, skipping",
                                 passenger.getUserId(), confirmationCode)
                 );
             }
-            var flightSeatMap = getSeatMap(flight.getFlightNumber());
-
-            newSeatsList = passengersToCheckIn
-                    .stream()
-                    .map(passenger -> {
-                        var seatNumber = requestedSeatMap.get(passenger.getUserId());
-                        if (!flightSeatMap.contains(seatNumber)) {
-                            log.error("Seat number {} does not exist in plane {}, skipping",
-                                    seatNumber, flight.getAirplane().getType().name());
-                            return null;
-                        }
-                        return Seat.builder()
-                                .seatNumber(seatNumber)
-                                .seatType(SeatType.STANDARD) //todo request type from dto, if null - set STD
-                                .flight(flight)
-                                .userId(passenger.getUserId())
-                                .build();
-                    })
-                    .filter(Objects::nonNull)
-                    .toList();
-            flight.setFreeSeats(freeSeats - newSeatsList.size());
+            newSeatsList = getNewSeatList(flight, requestedSeatMap, passengersToCheckIn);
+            flight.setFreeSeats(getFreeSeats(flight) - newSeatsList.size());
         }
         return seatRepository.saveAll(newSeatsList);
+    }
+
+
+    @Transactional
+    private boolean proceedWithFreeSeatsProcedure (Flight flight, List<User> passengersToCheckIn) {
+        Integer freeSeats = getFreeSeats(flight);
+        if (freeSeats < passengersToCheckIn.size()){
+            log.error("flight {} contains only {} free seats, " +
+                            "proceed with OVERBOOKING",
+                    flight.getFlightNumber(), freeSeats);
+            return false;
+        }
+
+        return true;
+    }
+
+    @NotNull
+    @Transactional
+    private static Integer getFreeSeats(Flight flight) {
+        var freeSeats = flight.getFreeSeats();
+        if (freeSeats == null){
+            log.error("free seats number for flight {} has been initialised",
+                    flight.getFlightNumber());
+            freeSeats = flight.getAirplane().getType().getSeatsQuantity();
+        }
+        return freeSeats;
+    }
+
+    @NotNull
+    @Transactional
+    private List<Seat> getNewSeatList(Flight flight, 
+                                      Map<String, String> requestedSeatMap, 
+                                      List<User> passengersToCheckIn) {
+        var flightSeatMap = getSeatMap(flight.getFlightNumber());
+        List<Seat> newSeatsList;
+        newSeatsList = passengersToCheckIn
+                .stream()
+                .map(passenger -> {
+                    var seatNumber = requestedSeatMap.get(passenger.getUserId());
+                    if (!flightSeatMap.contains(seatNumber)) {
+                        log.error("Seat number {} does not exist in plane {}, skipping",
+                                seatNumber, flight.getAirplane().getType().name());
+                        return null;
+                    }
+                    var calculatedSeatType = verifyRowType(flight, seatNumber);
+                    return Seat.builder()
+                            .seatNumber(seatNumber)
+                            .seatType(calculatedSeatType)
+                            .flight(flight)
+                            .userId(passenger.getUserId())
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .toList();
+        return newSeatsList;
+    }
+
+    @NotNull
+    @Transactional
+    private SeatType verifyRowType(Flight flight, String seatNumber) {
+        if (seatNumber == null || seatNumber.length() < 2) {
+            throw new IllegalArgumentException("Invalid seat number: " + seatNumber);
+        }
+        var premiumPlaneRows = flight.getAirplane().getType().getExitRows();
+        var seatDigit = Integer.parseInt(
+                seatNumber.substring(0, seatNumber.length() - 1));
+        for (int row : premiumPlaneRows){
+            if (row == seatDigit) {
+                return SeatType.EXIT;
+            }
+        }
+        return SeatType.STANDARD;
     }
 
     @Transactional

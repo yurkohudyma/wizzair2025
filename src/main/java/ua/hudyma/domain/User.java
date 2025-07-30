@@ -3,7 +3,6 @@ package ua.hudyma.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -30,7 +29,6 @@ public class User {
             fetch = FetchType.LAZY)
     private Wdc account;
     @NotNull
-    @Positive
     private BigDecimal balance = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "userList")
     @JsonIgnore
