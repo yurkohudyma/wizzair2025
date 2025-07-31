@@ -1,11 +1,11 @@
 package ua.hudyma.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import ua.hudyma.domain.*;
 import ua.hudyma.domain.Airplane.AirplaneType;
 import ua.hudyma.domain.Booking.BookingStatus;
@@ -25,6 +25,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
+@Log4j2
 class SeatServiceTest {
     @Mock
     private BookingRepository bookingRepository;
@@ -34,30 +35,28 @@ class SeatServiceTest {
     private FlightRepository flightRepository;
     @InjectMocks
     private SeatService seatService;
-    static String confirmationCode = "ABC123", flightNumber = "123";
+    static final String confirmationCode = "ABC123", flightNumber = "123";
+    static final int hrsBeforeCheckInClosed = 2;
     static CheckinRequestDto dto = new CheckinRequestDto(confirmationCode, Map.of());
     @Test
     void shouldReturnEmptyList_whenCheckInDeadlinePassed() {
 
         var flight = new Flight();
-        flight.setFlightDate(LocalDate.now().minusDays(1)); // вчора
-        flight.setFlightTime(LocalTime.now().minusHours(2)); // раніше
+        flight.setFlightDate(LocalDate.now()/*.minusDays(1)*/);
+        flight.setFlightTime(LocalTime.now().plusHours(3));
 
         var booking = new Booking();
         booking.setFlight(flight);
-        booking.setUserList(Collections.emptyList()); // для простоти
+        booking.setUserList(Collections.emptyList());
 
         when(bookingRepository
                 .findByConfirmationCode(confirmationCode))
                 .thenReturn(Optional.of(booking));
 
-        // Set hrsBeforeCheckInClosed = 3
-        setField(seatService, "hrsBeforeCheckInClosed", 3);
+        setField(seatService, "hrsBeforeCheckInClosed", hrsBeforeCheckInClosed);
 
-        // when
         var result = seatService.checkInPassengers(dto);
 
-        // then
         assertTrue(result.isEmpty());
         verify(seatRepository, never()).saveAll(any());
         verify(bookingRepository, times(1))
@@ -67,12 +66,12 @@ class SeatServiceTest {
     @Test
     void shallSetBookingStatusCheckedInAndReturnEmptyList_whenAllPassengersAlreadyCheckedIn() {
 
-        User passenger = new User();
+        var passenger = new User();
         passenger.setUserId("user-123");
         passenger.setId(42L);
 
-        Flight flight = new Flight();
-        Seat assignedSeat = new Seat();
+        var flight = new Flight();
+        var assignedSeat = new Seat();
         assignedSeat.setUserId("user-123");
         assignedSeat.setFlight(flight);
 
@@ -88,7 +87,7 @@ class SeatServiceTest {
         airplane.setType(AirplaneType.A321_XLR);
         flight.setAirplane(airplane);
 
-        Booking booking = new Booking();
+        var booking = new Booking();
         booking.setFlight(flight);
         booking.setUserList(List.of(passenger));
         booking.setBookingStatus(BookingStatus.CONFIRMED);
@@ -96,13 +95,18 @@ class SeatServiceTest {
         when(bookingRepository.findByConfirmationCode(confirmationCode))
                 .thenReturn(Optional.of(booking));
 
-        ReflectionTestUtils.setField(seatService, "hrsBeforeCheckInClosed", 3);
+        setField(seatService, "hrsBeforeCheckInClosed", 3);
 
-        List<Seat> result = seatService.checkInPassengers(dto);
+        var result = seatService.checkInPassengers(dto);
 
         assertTrue(result.isEmpty(), "Результат має бути порожній");
         assertEquals(BookingStatus.CHECKED_IN,
                 booking.getBookingStatus(), "Статус має оновитися");
         verify(seatRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNoSeatSelectionReceivedFromUserAndSeatsAutogenerationFailed (){
+
     }
 }

@@ -16,14 +16,18 @@ import ua.hudyma.domain.Seat.SeatType;
 import ua.hudyma.domain.User;
 import ua.hudyma.dto.CheckinRequestDto;
 import ua.hudyma.dto.SeatStatsResponseDto;
+import ua.hudyma.exception.SeatAssignmentException;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.SeatRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Predicate;
+
+import static java.time.LocalDateTime.now;
 
 @Service
 @RequiredArgsConstructor
@@ -48,15 +52,28 @@ public class SeatService {
         var flight = booking.getFlight();
         var flightDateTime = LocalDateTime
                 .of(flight.getFlightDate(), flight.getFlightTime());
-        var checkInDeadline = LocalDateTime
-                .now().minusHours(hrsBeforeCheckInClosed);
-        if (flightDateTime.isBefore(checkInDeadline)) {
-            log.error("Boarding is complete, check-in is void");
+        var checkInDeadline = flightDateTime
+                .minusHours(hrsBeforeCheckInClosed);
+        log.info("Flight time = {}", flightDateTime);
+        log.info("Now is {}", LocalTime.now());
+        log.info("Deadline is {} hrs before flight", hrsBeforeCheckInClosed);
+        log.info("Check-in closing at {}", checkInDeadline);
+
+        if (flightDateTime.isAfter(now()) ||
+                checkInDeadline.isAfter(now())) {
+            log.error("Boarding is complete, check-in is CLOSED");
             return Collections.emptyList();
         }
         var passengersList = booking.getUserList();
-        var seatList = flight.getSeatList();
         var requestedSeatMap = dto.seatSelection();
+        if (requestedSeatMap == null) {
+            requestedSeatMap = generateRandomSeatMap(passengersList);
+            if (requestedSeatMap.isEmpty()) {
+                throw new SeatAssignmentException("no seat data from user" +
+                        ", autogeneration option failed, cannot proceed");
+            }
+        }
+        var seatList = flight.getSeatList();
         List<Seat> newSeatsList;
         var passengersToCheckIn = passengersList
                 .stream()
@@ -89,6 +106,15 @@ public class SeatService {
         }
         booking.setBookingStatus(BookingStatus.CHECKED_IN);
         return seatRepository.saveAll(newSeatsList);
+    }
+
+    @NotNull
+    private Map<String, String> generateRandomSeatMap(List<User> passengersList) {
+
+        //todo fetch seatMap
+        //grant seat from cost-free pool
+
+        return Map.of();
     }
 
     private boolean proceedWithFreeSeatsProcedure(

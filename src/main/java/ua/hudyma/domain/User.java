@@ -2,9 +2,9 @@ package ua.hudyma.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import javax.annotation.Nonnegative;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class User {
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
     private Wdc account;
-    @NotNull
+    @Nonnegative
     private BigDecimal balance = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "userList")
     @JsonIgnore
