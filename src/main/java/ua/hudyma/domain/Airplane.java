@@ -18,22 +18,23 @@ public class Airplane {
 
     @RequiredArgsConstructor
     public enum AirplaneType {
-        A320_200(180, 6),
-        A320_NEO(186, 6),
-        A321_200(230, 6),
-        A321_NEO(239, 6),
-        A321_XLR(244, 6),
-        A350_900ULR(140, 7);
+        A320_200(180, 6, new int[]{13}),
+        A320_NEO(186, 6, new int[]{13}),
+        A321_200(230, 6, new int[]{11,12,26}),
+        A321_NEO(239, 6, new int[]{11,12,26}),
+        A321_XLR(244, 6, new int[]{18,27}),
+        A350_900ULR(140, 7, new int[]{10, 12});
         private final int seatsQuantity;
-
-        public int getSeatInRow() {
-            return seatInRow;
-        }
-
         private final int seatInRow;
-
+        private final int[] exitRows;
         public int getSeatsQuantity() {
             return seatsQuantity;
+        }
+        public int[] getExitRows() {
+            return exitRows;
+        }
+        public int getSeatInRow() {
+            return seatInRow;
         }
     }
 }
