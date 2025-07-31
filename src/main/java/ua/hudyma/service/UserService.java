@@ -47,7 +47,6 @@ public class UserService {
                 list);
     }
 
-
     public User updateUser(String userId, User newUser) {
         var user = userRepository.findByUserId(userId).orElseThrow();
         mergeValuesIfNotNull(user, newUser);

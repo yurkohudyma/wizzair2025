@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import javax.annotation.Nonnegative;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,7 +45,7 @@ public class Booking {
     @JoinColumn(name = "inbound_flight_id")
     private Flight inboundFlight;
 
-    @Positive
+    @Nonnegative
     @NotNull
     private BigDecimal price = BigDecimal.ZERO;
 
@@ -60,7 +60,7 @@ public class Booking {
     @Enumerated(value = EnumType.STRING)
     private BookingStatus bookingStatus;
 
-    @OneToMany(mappedBy = "booking")
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<Payment> paymentList = new ArrayList<>();
 
     @OneToOne
@@ -70,6 +70,7 @@ public class Booking {
     public enum BookingStatus {
         CONFIRMED,  /** user has approved the flight selection with fixed price */
         PAID,       /** flight price has been paid in full */
+        CHECKED_IN, /** all pax in booking have been checked in */
         CANCELED,   /** booking has been canceled by WIZZAIR, but STILL is not REBOOKED or REFUNDED */
         REFUNDED,   /** flight has been canceled by USER or WZZ and been refunded if available */
         REBOOKED,   /** flight has been canceled by WZZ and been rebooked by USER */

@@ -2,10 +2,9 @@ package ua.hudyma.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
+import javax.annotation.Nonnegative;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,15 +21,15 @@ public class User {
     private String userId;
     @Embedded
     private Profile profile;
-    @OneToMany(mappedBy = "mainUser")
+    @OneToMany(mappedBy = "mainUser",
+            cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Booking> bookingsAsMain = new ArrayList<>();
     @OneToOne(mappedBy = "user",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
     private Wdc account;
-    @NotNull
-    @Positive
+    @Nonnegative
     private BigDecimal balance = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "userList")
     @JsonIgnore

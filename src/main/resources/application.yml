@@ -20,7 +20,6 @@ spring:
     properties:
       hibernate.format_sql: true
 
-
   cache:
     type: redis
     redis:

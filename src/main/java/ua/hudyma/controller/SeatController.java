@@ -19,6 +19,11 @@ public class SeatController {
 
     private final SeatService seatService;
 
+    @GetMapping("/getRandomVacantSeat/{flightNumber}")
+    public ResponseEntity<String> getRandomVacantSeat (@PathVariable String flightNumber){
+        return ResponseEntity.ok(seatService.getRandomVacantSeat(flightNumber));
+    }
+
     @PostMapping("/check-in")
     public ResponseEntity<List<Seat>> checkin (
             @RequestBody CheckinRequestDto dto){

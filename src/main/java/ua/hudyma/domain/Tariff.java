@@ -22,7 +22,7 @@ public class Tariff {
     @Enumerated(value = EnumType.STRING)
     private TariffType tariffType;
 
-    @OneToOne(mappedBy = "tariff")
+    @OneToOne(mappedBy = "tariff", cascade = CascadeType.ALL)
     @JsonIgnore
     private Booking booking;
 
