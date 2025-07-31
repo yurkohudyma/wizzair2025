@@ -36,3 +36,4 @@ build/
 /.gitattributes
 /src/main/resources/db/migration/
 /sql/
+/src/main/resources/auth0.yml
