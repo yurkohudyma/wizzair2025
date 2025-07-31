@@ -22,12 +22,13 @@ import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.SeatRepository;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Predicate;
 
 import static java.time.LocalDateTime.now;
+import static java.util.stream.Collectors.toMap;
 
 @Service
 @RequiredArgsConstructor
@@ -54,26 +55,26 @@ public class SeatService {
                 .of(flight.getFlightDate(), flight.getFlightTime());
         var checkInDeadline = flightDateTime
                 .minusHours(hrsBeforeCheckInClosed);
-        log.info("Flight time = {}", flightDateTime);
-        log.info("Now is {}", LocalTime.now());
-        log.info("Deadline is {} hrs before flight", hrsBeforeCheckInClosed);
-        log.info("Check-in closing at {}", checkInDeadline);
-
-        if (flightDateTime.isAfter(now()) ||
-                checkInDeadline.isAfter(now())) {
+        if (flightDateTime.isBefore(now()) ||
+                checkInDeadline.isBefore(now())) {
             log.error("Boarding is complete, check-in is CLOSED");
             return Collections.emptyList();
         }
         var passengersList = booking.getUserList();
         var requestedSeatMap = dto.seatSelection();
-        if (requestedSeatMap == null) {
-            requestedSeatMap = generateRandomSeatMap(passengersList);
+        var seatList = flight.getSeatList();
+        if (requestedSeatMap == null || requestedSeatMap.isEmpty()) {
+            var flightSeatList = getSeatMap(flight.getFlightNumber());
+            requestedSeatMap = generateAutoSelectRandomVacantMap(
+                    passengersList, flightSeatList, seatList);
+
             if (requestedSeatMap.isEmpty()) {
                 throw new SeatAssignmentException("no seat data from user" +
                         ", autogeneration option failed, cannot proceed");
             }
+            System.out.println(requestedSeatMap);
         }
-        var seatList = flight.getSeatList();
+
         List<Seat> newSeatsList;
         var passengersToCheckIn = passengersList
                 .stream()
@@ -109,12 +110,31 @@ public class SeatService {
     }
 
     @NotNull
-    private Map<String, String> generateRandomSeatMap(List<User> passengersList) {
+    private Map<String, String> generateAutoSelectRandomVacantMap(
+            List<User> passengersList,
+            List<String> flightSeatList,
+            List<Seat> occupiedSeatsList) {
+        return passengersList == null ? Map.of() :
+                passengersList
+                        .stream()
+                        .collect(toMap(User::getUserId,
+                                v -> getRandomVacantSeat(flightSeatList, occupiedSeatsList)));
+    }
 
-        //todo fetch seatMap
-        //grant seat from cost-free pool
+    private String getRandomVacantSeat(
+            List<String> flightSeatList,
+            List<Seat> occupiedSeatsList) {
+        var index = new SecureRandom().nextInt(flightSeatList.size());
+        String seatCode = flightSeatList.get(index);
+        var isSeatTaken = occupiedSeatsList
+                .stream()
+                .anyMatch(
+                        seat -> seat
+                                .getSeatNumber()
+                                .equals(seatCode));
+        return isSeatTaken
+                ? getRandomVacantSeat(flightSeatList, occupiedSeatsList) : seatCode;
 
-        return Map.of();
     }
 
     private boolean proceedWithFreeSeatsProcedure(
