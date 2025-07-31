@@ -21,10 +21,10 @@ public class Airport {
     @Column(unique = true, nullable = false)
     private String icaoCode;
 
-    @OneToMany(mappedBy = "from")
+    @OneToMany(mappedBy = "from", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Flight> departures;
-    @OneToMany(mappedBy = "to")
+    @OneToMany(mappedBy = "to", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Flight> arrivals;
     @Column(nullable = false)

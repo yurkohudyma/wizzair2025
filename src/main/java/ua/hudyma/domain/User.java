@@ -21,7 +21,8 @@ public class User {
     private String userId;
     @Embedded
     private Profile profile;
-    @OneToMany(mappedBy = "mainUser")
+    @OneToMany(mappedBy = "mainUser",
+            cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Booking> bookingsAsMain = new ArrayList<>();
     @OneToOne(mappedBy = "user",

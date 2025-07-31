@@ -62,11 +62,11 @@ public class SeatService {
         }
         var passengersList = booking.getUserList();
         var requestedSeatMap = dto.seatSelection();
-        var seatList = flight.getSeatList();
+        var occupiedSeatList = flight.getSeatList();
         if (requestedSeatMap == null || requestedSeatMap.isEmpty()) {
             var flightSeatList = getSeatMap(flight.getFlightNumber());
             requestedSeatMap = generateAutoSelectRandomVacantMap(
-                    passengersList, flightSeatList, seatList);
+                    passengersList, flightSeatList, occupiedSeatList);
 
             if (requestedSeatMap.isEmpty()) {
                 throw new SeatAssignmentException("no seat data from user" +
@@ -78,7 +78,7 @@ public class SeatService {
         List<Seat> newSeatsList;
         var passengersToCheckIn = passengersList
                 .stream()
-                .filter(isPassengerNotCheckedIn(seatList))
+                .filter(isPassengerNotCheckedIn(occupiedSeatList))
                 .toList();
 
         if (passengersToCheckIn.isEmpty()) {
@@ -121,7 +121,7 @@ public class SeatService {
                                 v -> getRandomVacantSeat(flightSeatList, occupiedSeatsList)));
     }
 
-    private String getRandomVacantSeat(
+    public String getRandomVacantSeat(
             List<String> flightSeatList,
             List<Seat> occupiedSeatsList) {
         var index = new SecureRandom().nextInt(flightSeatList.size());
@@ -134,7 +134,23 @@ public class SeatService {
                                 .equals(seatCode));
         return isSeatTaken
                 ? getRandomVacantSeat(flightSeatList, occupiedSeatsList) : seatCode;
+    }
 
+    @Transactional(readOnly = true)
+    public String getRandomVacantSeat(String flightNumber) {
+        var flight = flightRepository.findByFlightNumber(flightNumber).orElseThrow();
+        var occupiedSeatsList = flight.getSeatList();
+        var flightSeatList = getSeatMap(flightNumber);
+        var index = new SecureRandom().nextInt(flightSeatList.size());
+        String seatCode = flightSeatList.get(index);
+        var isSeatTaken = occupiedSeatsList
+                .stream()
+                .anyMatch(
+                        seat -> seat
+                                .getSeatNumber()
+                                .equals(seatCode));
+        return isSeatTaken
+                ? getRandomVacantSeat(flightSeatList, occupiedSeatsList) : seatCode;
     }
 
     private boolean proceedWithFreeSeatsProcedure(
