@@ -59,7 +59,7 @@ public class AuthController {
 
 
     @GetMapping("/authorize")
-    public RedirectView authorize (HttpServletResponse response) {
+    public RedirectView authorize(HttpServletResponse response) {
         log.info(authString);
         return new RedirectView(authString);
     }
@@ -74,67 +74,58 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication,
-            @RequestParam(value = "returnTo", required = false, defaultValue = "/") String returnTo
-    ) throws IOException {
+            @RequestParam(
+                    value = "returnTo", required = false, defaultValue = "/") String returnTo) throws IOException {
         if (authentication != null) {
             new SecurityContextLogoutHandler().logout(request, response, authentication);
         }
 
-        String normalizedIssuer = issuerUri.endsWith("/") ? issuerUri.substring(0, issuerUri.length() - 1) : issuerUri;
-        String logoutUrl = normalizedIssuer + "/v2/logout?client_id=" + clientId + "&returnTo=" + logoutReturnTo;
+        String normalizedIssuer = issuerUri.endsWith("/")
+                ? issuerUri.substring(0, issuerUri.length() - 1)
+                : issuerUri;
+        String logoutUrl = normalizedIssuer +
+                "/v2/logout?client_id=" + clientId + "&returnTo=" + logoutReturnTo;
         response.sendRedirect(logoutUrl);
     }
 
     @GetMapping("/custom-login")
     public void login(HttpServletResponse response) throws IOException {
-        /*log.info("--uri = {}", issuerUri);
-        log.info("--clientId = {}", clientId);
-        log.info("--audience = {}", audience);
-        log.info("--token-uri = {}", tokenUri);
-        log.info("--issuer-uri = {}", issuerUri);*/
         response.sendRedirect("/oauth2/authorization/auth0");
     }
 
     @GetMapping("/callback")
     public ResponseEntity<?> callback(@RequestParam String code) {
         RestTemplate restTemplate = new RestTemplate();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         Map<String, String> body = Map.of(
-                "grant_type", "authorization_code",
+                "grant_type",
+                "authorization_code",
                 "client_id", clientId,
                 "client_secret", secret,
                 "code", code,
-                "redirect_uri", redirectUri
-        );
-
+                "redirect_uri", redirectUri);
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                tokenUri,
-                HttpMethod.POST,
-                request,
-                new ParameterizedTypeReference<>() {}
-        );
-
-
+        ResponseEntity<Map<String, Object>> response = restTemplate
+                .exchange(
+                        tokenUri,
+                        HttpMethod.POST,
+                        request,
+                        new ParameterizedTypeReference<>() {
+        });
         return ResponseEntity.ok(response.getBody());
     }
 
     @GetMapping("/token")
     public ResponseEntity<?> getToken(
-            @RegisteredOAuth2AuthorizedClient("auth0") OAuth2AuthorizedClient client,
-            @AuthenticationPrincipal OidcUser oidcUser
-    ) {
+            @RegisteredOAuth2AuthorizedClient("auth0")
+            OAuth2AuthorizedClient client,
+            @AuthenticationPrincipal OidcUser oidcUser) {
         return ResponseEntity.ok(Map.of(
                 "access_token", client.getAccessToken().getTokenValue(),
                 "expires_at", client.getAccessToken().getExpiresAt(),
-                "user_email", oidcUser.getEmail()
-        ));
+                "user_email", oidcUser.getEmail()));
     }
-
 
     @GetMapping("/")
     public String home() {
@@ -142,12 +133,11 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal OidcUser principal) {
+    public ResponseEntity<?> getCurrentUser(
+            @AuthenticationPrincipal OidcUser principal) {
         return ResponseEntity.ok(Map.of(
                 "name", principal.getFullName(),
                 "email", principal.getEmail(),
-                "claims", principal.getClaims()
-        ));
+                "claims", principal.getClaims()));
     }
-
 }
