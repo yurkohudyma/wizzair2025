@@ -69,6 +69,7 @@ public class Booking {
 
     public enum BookingStatus {
         CONFIRMED,  /** user has approved the flight selection with fixed price */
+        CHECKED_IN,
         PAID,       /** flight price has been paid in full */
         CANCELED,   /** booking has been canceled by WIZZAIR, but STILL is not REBOOKED or REFUNDED */
         REFUNDED,   /** flight has been canceled by USER or WZZ and been refunded if available */
