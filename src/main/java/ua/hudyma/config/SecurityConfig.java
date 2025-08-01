@@ -24,7 +24,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/public/**", "/custom-login").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/public/**",
+                                "/custom-login",
+                                "/authorize")
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

@@ -5,10 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -19,8 +17,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -48,6 +49,25 @@ public class AuthController {
 
     @Value("${custom.logout-return-to}")
     private String logoutReturnTo;
+    @Value("${custom.auth-uri}")
+    private String authUri;
+    @Value("${custom.callback-uri}")
+    private String callbackUri;
+
+    @Value("${custom.auth-string}")
+    private String authString;
+
+
+    @GetMapping("/authorize")
+    public RedirectView authorize (HttpServletResponse response) {
+        log.info(authString);
+        return new RedirectView(authString);
+    }
+
+    private String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
 
     @GetMapping("/logout")
     public void logout(
@@ -67,23 +87,12 @@ public class AuthController {
 
     @GetMapping("/custom-login")
     public void login(HttpServletResponse response) throws IOException {
-        log.info("--uri = {}", issuerUri);
+        /*log.info("--uri = {}", issuerUri);
         log.info("--clientId = {}", clientId);
         log.info("--audience = {}", audience);
         log.info("--token-uri = {}", tokenUri);
-        log.info("--issuer-uri = {}", issuerUri);
-
-     /*   String url = UriComponentsBuilder.fromUriString(authUri)
-                .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
-                .queryParam("redirect_uri", redirectUri)
-                .queryParam("scope", "openid profile email")
-                .queryParam("audience", audience)
-                .build()
-                .toUriString();
-        response.sendRedirect("/oauth2/authorization/auth0");*/
+        log.info("--issuer-uri = {}", issuerUri);*/
         response.sendRedirect("/oauth2/authorization/auth0");
-
     }
 
     @GetMapping("/callback")
@@ -103,11 +112,13 @@ public class AuthController {
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                 tokenUri,
+                HttpMethod.POST,
                 request,
-                Map.class
+                new ParameterizedTypeReference<>() {}
         );
+
 
         return ResponseEntity.ok(response.getBody());
     }
