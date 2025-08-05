@@ -67,12 +67,10 @@ public class SeatService {
             var flightSeatList = getSeatMap(flight.getFlightNumber());
             requestedSeatMap = generateAutoSelectRandomVacantMap(
                     passengersList, flightSeatList, occupiedSeatList);
-
             if (requestedSeatMap.isEmpty()) {
                 throw new SeatAssignmentException("no seat data from user" +
                         ", autogeneration option failed, cannot proceed");
             }
-            System.out.println(requestedSeatMap);
         }
 
         List<Seat> newSeatsList;
@@ -153,7 +151,7 @@ public class SeatService {
                 ? getRandomVacantSeat(flightSeatList, occupiedSeatsList) : seatCode;
     }
 
-    private boolean proceedWithFreeSeatsProcedure(
+   boolean proceedWithFreeSeatsProcedure(
             Flight flight, List<User> passengersToCheckIn) {
         Integer freeSeats = getFreeSeats(flight);
         if (freeSeats < passengersToCheckIn.size()) {
@@ -289,7 +287,7 @@ public class SeatService {
                 .toList();
     }
 
-    private String[][] prepareSeatMapArray(AirplaneType airplaneType) {
+    String[][] prepareSeatMapArray(AirplaneType airplaneType) {
         if (airplaneType != null) {
             var seats = airplaneType.getSeatsQuantity();
             var seatInRow = airplaneType.getSeatInRow();

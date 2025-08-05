@@ -20,8 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -63,11 +61,6 @@ public class AuthController {
         log.info(authString);
         return new RedirectView(authString);
     }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
 
     @GetMapping("/logout")
     public void logout(

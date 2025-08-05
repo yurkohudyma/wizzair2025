@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/flights",
                                 "/public/**",
                                 "/custom-login",
                                 "/authorize")
