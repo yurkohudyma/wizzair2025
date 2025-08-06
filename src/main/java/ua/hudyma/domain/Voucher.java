@@ -6,8 +6,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import ua.hudyma.enums.VoucherCurrency;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -22,9 +23,9 @@ public class Voucher {
     @JsonFormat(pattern = "dd-MM-yyyy")
     @CreationTimestamp
     private Date issuedOn;
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    @Column(nullable = false)
-    private LocalDate expiresOn;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
+    private LocalDateTime expiresOn;
+
     @OneToOne(mappedBy = "voucher", cascade = CascadeType.ALL)
     @JsonIgnore
     private Tariff tariff;
@@ -39,27 +40,6 @@ public class Voucher {
     @Enumerated(value = EnumType.STRING)
     private VoucherCurrency voucherCurrency;
     public enum VoucherType {GIFT, CAFE_AND_BOUTIQUE}
-    public enum VoucherCurrency {
-        AED, // United Arab Emirates Dirham
-        BAM, // Bosnia and Herzegovina Convertible Mark
-        BGN, // Bulgarian Lev
-        CHF, // Swiss Franc
-        CZK, // Czech Koruna
-        DKK, // Danish Krone
-        EUR, // Euro
-        GBP, // British Pound
-        GEL, // Georgian Lari
-        HUF, // Hungarian Forint
-        ILS, // Israeli New Shekel
-        MKD, // Macedonian Denar
-        NOK, // Norwegian Krone
-        PLN, // Polish Zloty
-        RON, // Romanian Leu
-        RSD, // Serbian Dinar
-        SEK, // Swedish Krona
-        UAH, // Ukrainian Hryvnia
-        USD  // US Dollar
-    }
 
     @RequiredArgsConstructor
     public enum VoucherAmount {

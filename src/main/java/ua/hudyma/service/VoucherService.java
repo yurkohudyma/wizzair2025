@@ -12,8 +12,8 @@ import ua.hudyma.exception.VoucherInsufficientDataException;
 import ua.hudyma.repository.TariffRepository;
 import ua.hudyma.repository.VoucherRepository;
 
-import java.time.LocalDate;
-
+import static java.lang.String.format;
+import static java.time.LocalDateTime.now;
 import static ua.hudyma.util.IdGenerator.generateNumeralId;
 
 @Service
@@ -26,8 +26,7 @@ public class VoucherService {
 
     @Transactional
     public Voucher generateVoucher(VoucherRequestDto dto) {
-        var tariff = tariffRepository
-                .findById(dto.tariffId()).orElseThrow();
+
         var violations = getValidator().validate(dto);
         if (!violations.isEmpty()){
             throw new VoucherInsufficientDataException("Voucher Rq Dto contains null data for non-nullable fields");
@@ -38,15 +37,38 @@ public class VoucherService {
         voucher.setVoucherCurrency(dto.voucherCurrency());
         var voucherCode = "WZZ" + generateNumeralId(16);
         voucher.setVoucherCode(voucherCode);
-        voucher.setExpiresOn(LocalDate.now().plusYears(1));
+        voucher.setExpiresOn(now().plusYears(1));
         voucherRepository.save(voucher);
-        tariff.setVoucher(voucher);
-        voucher.setTariff(tariff);
         return voucher;
     }
 
+    @Transactional
+    public String applyVoucher(Long tariffId, String voucherCode){
+        var tariff = tariffRepository
+                .findById(tariffId).orElseThrow();
+        var voucher = voucherRepository.findByVoucherCode(voucherCode).orElseThrow();
+        if (voucher.getTariff() != null && tariff.getVoucher() != null){
+            var resultString = format("voucher %s seems like to have been redeemed on tariff %s",
+                    voucherCode, tariffId);
+            log.warn(resultString);
+            return resultString;
+        }
+        else if (voucher.getExpiresOn().isBefore(now())){
+            var resultString = format("Voucher %s has expired %s", voucherCode, voucher.getExpiresOn());
+            log.warn(resultString);
+            return resultString;
+        }
+        else {
+            voucher.setTariff(tariff);
+            tariff.setVoucher(voucher);
+            return format("Voucher %s successfully redeemed for tariff %d", voucherCode, tariffId);
+        }
+        //todo provide calculation redemption as per voucher value
+    }
+
     private Validator getValidator() {
-        var validatorFactory = Validation.buildDefaultValidatorFactory();
-        return validatorFactory.getValidator();
+        try (var validatorFactory = Validation.buildDefaultValidatorFactory()) {
+            return validatorFactory.getValidator();
+        }
     }
 }
