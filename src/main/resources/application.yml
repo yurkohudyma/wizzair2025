@@ -5,6 +5,7 @@ spring:
     import:
       - "classpath:wizz.yml"
       - "classpath:auth0.yml"
+      - "classpath:ssl.yml"
 
   datasource:
     url: jdbc:mysql://localhost:3306/wizzair2025

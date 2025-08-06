@@ -136,7 +136,8 @@ public class SeatService {
 
     @Transactional(readOnly = true)
     public String getRandomVacantSeat(String flightNumber) {
-        var flight = flightRepository.findByFlightNumber(flightNumber).orElseThrow();
+        var flight = flightRepository
+                .findByFlightNumber(flightNumber).orElseThrow();
         var occupiedSeatsList = flight.getSeatList();
         var flightSeatList = getSeatMap(flightNumber);
         var index = new SecureRandom().nextInt(flightSeatList.size());

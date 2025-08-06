@@ -1,6 +1,7 @@
 package ua.hudyma.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,8 @@ import java.time.LocalDate;
 import java.util.*;
 
 import static java.time.LocalTime.now;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -57,6 +60,11 @@ class SeatServiceTest {
         passenger = new User();
         assignedSeat = new Seat();
         airplane = new Airplane();
+        airplane.setType(AirplaneType.A321_XLR);
+        flight.setAirplane(airplane);
+        flight.setFlightNumber(flightNumber);
+
+        booking.setFlight(flight);
     }
 
     @Test
@@ -69,7 +77,6 @@ class SeatServiceTest {
                 .minusHours(hrsBeforeCheckInClosed));
         log.info("now is = {})", now());
 
-        booking.setFlight(flight);
         booking.setUserList(Collections.emptyList());
 
         when(bookingRepository
@@ -93,7 +100,6 @@ class SeatServiceTest {
         passenger.setUserId("user-123");
         passenger.setId(42L);
 
-        flight.setFlightNumber(flightNumber);
         assignedSeat.setUserId("user-123");
         assignedSeat.setFlight(flight);
 
@@ -105,10 +111,6 @@ class SeatServiceTest {
         flight.setFlightTime(now().plusHours(hrsBeforeCheckInClosed + 1));
         flight.setSeatList(List.of(assignedSeat));
 
-        airplane.setType(AirplaneType.A321_XLR);
-        flight.setAirplane(airplane);
-
-        booking.setFlight(flight);
         booking.setUserList(List.of(passenger));
         booking.setBookingStatus(CONFIRMED);
 
@@ -131,13 +133,9 @@ class SeatServiceTest {
         flight.setFlightTime(now().plusHours(hrsBeforeCheckInClosed + 1));
         flight.setSeatList(Collections.emptyList());
 
-        airplane.setType(AirplaneType.A321_XLR);
-        flight.setAirplane(airplane);
-        flight.setFlightNumber(flightNumber);
-
         setField(seatService, "hrsBeforeCheckInClosed",
                 hrsBeforeCheckInClosed);
-        booking.setFlight(flight);
+
         booking.setUserList(Collections.emptyList());
 
         when(bookingRepository.findByConfirmationCode(confirmationCode))
@@ -155,14 +153,9 @@ class SeatServiceTest {
 
         flight.setFlightDate(LocalDate.now().plusDays(1));
         flight.setFlightTime(now().plusHours(hrsBeforeCheckInClosed + 1));
-        flight.setSeatList(Collections.emptyList()); // немає зайнятих місць
+        flight.setSeatList(Collections.emptyList());
 
-        airplane.setType(AirplaneType.A321_XLR);
-        flight.setAirplane(airplane);
-        flight.setFlightNumber(flightNumber);
-
-        booking.setFlight(flight);
-        booking.setUserList(List.of(passenger)); // <- додано пасажира
+        booking.setUserList(List.of(passenger));
 
         when(bookingRepository.findByConfirmationCode(confirmationCode))
                 .thenReturn(Optional.of(booking));
@@ -170,17 +163,15 @@ class SeatServiceTest {
         dto = new CheckinRequestDto(confirmationCode,
                 Map.of("1A", "1"));
 
-        var realService = new SeatService(
-                seatRepository,
-                bookingRepository,
-                flightRepository);
+        var realService = getMockSeatService();
         setField(realService, "hrsBeforeCheckInClosed",
                 hrsBeforeCheckInClosed);
 
         var spyService = spy(realService);
 
         doReturn(false).when(spyService)
-                .proceedWithFreeSeatsProcedure(eq(flight), anyList());
+                .proceedWithFreeSeatsProcedure(eq(flight),
+                        anyList());
 
         var result = spyService.checkInPassengers(dto);
         assertTrue(result.isEmpty(), "Результат має бути порожній");
@@ -190,9 +181,6 @@ class SeatServiceTest {
     void shouldReturnListOfListsSeatMapIfAirplaneIsNotNull (){
         when(flightRepository.findByFlightNumber(flightNumber))
                 .thenReturn(Optional.of(flight));
-        airplane.setType(AirplaneType.A321_XLR);
-        var type = airplane.getType();
-        flight.setAirplane(airplane);
         var result = seatService.getSeatMapEnclosed(flightNumber);
 
         assertNotNull(result);
@@ -200,7 +188,6 @@ class SeatServiceTest {
         assertTrue(result.get(0) instanceof List);
         assertTrue(result.get(0).get(0) instanceof String);
 
-        // опціонально: перевірка розмірів або вмісту, залежно від логіки prepareSeatMapArray
         var expectedArray = seatService
                 .prepareSeatMapArray(airplane.getType());
         assertEquals(expectedArray.length, result.size());
@@ -208,4 +195,40 @@ class SeatServiceTest {
 
     }
 
+    @Test
+    void shouldReturnRandomVacantSeat (){
+        when(flightRepository.findByFlightNumber(flightNumber))
+                .thenReturn(Optional.of(flight));
+        assignedSeat.setFlight(flight);
+        assignedSeat.setSeatNumber("1A");
+        booking.getUserList().add(passenger);
+        flight.setSeatList(List.of(assignedSeat));
+        booking.setFlight(flight);
+
+        var allSeats = List.of("1A", "1B", "1C");
+
+        var realSeatService = getMockSeatService();
+
+        var spySeatService = spy(realSeatService);
+        doReturn(allSeats).when(spySeatService).getSeatMap(flightNumber);
+
+        // Act
+        var result = spySeatService.getRandomVacantSeat(flightNumber);
+
+        // Assert
+        assertThat(result, isOneOf("1B", "1C"));
+        assertInstanceOf(String.class, result);
+
+
+    }
+
+
+    @NotNull
+    private SeatService getMockSeatService() {
+        var realService = new SeatService(
+                seatRepository,
+                bookingRepository,
+                flightRepository);
+        return realService;
+    }
 }
