@@ -16,4 +16,5 @@ public record BookingResponseDto(
         Date createdOn,
         Date updatedOn,
         BookingStatus bookingStatus,
-        TariffType tariffType) {}
+        TariffType tariffType
+        ) {}

@@ -30,6 +30,13 @@ public class BookingController {
                 bookingService.getBooking(confirmationCode));
     }
 
+    @GetMapping("/code")
+    public ResponseEntity<BookingResponseDto> getBookingReq (
+            @RequestParam String confirmationCode){
+        return ResponseEntity.ok(
+                bookingService.getBooking(confirmationCode));
+    }
+
     @PostMapping
     public ResponseEntity<Booking> addBooking(@RequestBody BookingDto dto) {
         var newBooking = bookingService.addBooking(dto);

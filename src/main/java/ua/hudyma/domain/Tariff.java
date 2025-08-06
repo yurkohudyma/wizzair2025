@@ -17,20 +17,19 @@ public class Tariff {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private TariffType tariffType;
-
     @OneToOne(mappedBy = "tariff", cascade = CascadeType.ALL)
     @JsonIgnore
     private Booking booking;
-
+    @OneToOne
+    @JoinColumn(name = "voucher_id")
+    private Voucher voucher;
     Boolean wizzFlex = false;
     Boolean wizzPriority = false;
     Boolean airportRegistration = false;
     Boolean autoOnlineRegistration = false;
-
 
     @RequiredArgsConstructor
     public enum TariffType {
@@ -42,7 +41,6 @@ public class Tariff {
             return coefficient;
         }
     }
-
     @Transient
     @JsonIgnore
     private Map<String, BigDecimal> invoiceMap = new HashMap<>();
