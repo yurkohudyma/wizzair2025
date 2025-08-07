@@ -155,7 +155,7 @@ public class BookingService {
                 .findByConfirmationCode(confirmationCode).orElseThrow();
         var tariff = booking.getTariff();
         var passengerQty = BigDecimal.valueOf(
-                booking.getUserList().size()).add(BigDecimal.ONE);
+                booking.getUserList().size());
         var tariffDto = mapToTariffDto(tariff);
         var map = tariffService
                 .prepareTariffTotalMap(tariffDto, passengerQty, confirmationCode);
@@ -164,20 +164,35 @@ public class BookingService {
     }
 
     private TariffDto mapToTariffDto(Tariff tariff) {
+        long voucherId = 0L;
+        long discountId = 0L;
+        if (tariff.getVoucher() != null){
+             voucherId = tariff.getVoucher().getId();
+        }
+        if (tariff.getDiscount() != null){
+            discountId = tariff.getDiscount().getId();
+        }
         return new TariffDto(
                 tariff.getTariffType(),
                 tariff.getWizzFlex(),
                 tariff.getWizzPriority(),
                 tariff.getAutoOnlineRegistration(),
-                tariff.getAirportRegistration());
+                tariff.getAirportRegistration(),
+                voucherId,
+                discountId);
     }
 
-    private boolean checkFlightsInterconnection(Flight flight, Flight inboundFlight) {
-        return flight.getTo().getIataCode().equals(inboundFlight.getTo().getIataCode()) ||
-                flight.getFrom().getIataCode().equals(inboundFlight.getTo().getIataCode());
+    private boolean checkFlightsInterconnection(Flight flight,
+                                                Flight inboundFlight) {
+        return flight.getTo().getIataCode()
+                        .equals(inboundFlight.getTo().getIataCode()) ||
+                flight.getFrom().getIataCode()
+                        .equals(inboundFlight.getTo().getIataCode());
     }
 
-    private Tariff populateNewTariff(TariffDto tariffDto, Map<String, BigDecimal> tariffTotalMap) {
+    private Tariff populateNewTariff(
+            TariffDto tariffDto,
+                      Map<String, BigDecimal> tariffTotalMap) {
         var tariff = new Tariff();
         tariff.setTariffType(tariffDto.tariffType());
         tariff.setWizzFlex(tariffDto.wizzFlex());

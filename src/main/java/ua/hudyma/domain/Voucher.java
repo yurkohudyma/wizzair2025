@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import ua.hudyma.enums.VoucherCurrency;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -39,6 +40,7 @@ public class Voucher {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private VoucherCurrency voucherCurrency;
+
     public enum VoucherType {GIFT, CAFE_AND_BOUTIQUE}
 
     @RequiredArgsConstructor
@@ -50,8 +52,8 @@ public class Voucher {
         FIFTY (50),
         HUNDRED (100);
         private final Integer amount;
-        public Integer getAmount() {
-            return amount;
+        public BigDecimal getAmount() {
+            return BigDecimal.valueOf(amount);
         }
     }
 }

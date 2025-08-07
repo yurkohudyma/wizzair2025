@@ -7,4 +7,6 @@ public record TariffDto (
         boolean wizzFlex,
         boolean wizzPriority,
         boolean autoOnlineRegistration,
-        boolean airportRegistration) {}
+        boolean airportRegistration,
+        long voucherId,
+        long discountId) {}

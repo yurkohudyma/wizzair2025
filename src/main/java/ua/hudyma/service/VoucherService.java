@@ -46,24 +46,26 @@ public class VoucherService {
     public String applyVoucher(Long tariffId, String voucherCode){
         var tariff = tariffRepository
                 .findById(tariffId).orElseThrow();
-        var voucher = voucherRepository.findByVoucherCode(voucherCode).orElseThrow();
+        var voucher = voucherRepository
+                .findByVoucherCode(voucherCode).orElseThrow();
         if (voucher.getTariff() != null && tariff.getVoucher() != null){
-            var resultString = format("voucher %s seems like to have been redeemed on tariff %s",
+            var resultString = format("voucher %s has been redeemed on tariff %s",
                     voucherCode, tariffId);
             log.warn(resultString);
             return resultString;
         }
         else if (voucher.getExpiresOn().isBefore(now())){
-            var resultString = format("Voucher %s has expired %s", voucherCode, voucher.getExpiresOn());
+            var resultString = format("Voucher %s has expired %s",
+                    voucherCode, voucher.getExpiresOn());
             log.warn(resultString);
             return resultString;
         }
         else {
             voucher.setTariff(tariff);
             tariff.setVoucher(voucher);
-            return format("Voucher %s successfully redeemed for tariff %d", voucherCode, tariffId);
+            return format("Voucher %s successfully redeemed for tariff %d",
+                    voucherCode, tariffId);
         }
-        //todo provide calculation redemption as per voucher value
     }
 
     private Validator getValidator() {

@@ -26,6 +26,10 @@ public class Tariff {
     @OneToOne
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
+    @OneToOne
+    @JoinColumn(name = "discount_id")
+    private Discount discount;
+
     Boolean wizzFlex = false;
     Boolean wizzPriority = false;
     Boolean airportRegistration = false;

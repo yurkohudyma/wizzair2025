@@ -50,6 +50,13 @@ public class BookingController {
                 .prepareTotalPaymentInvoice(confirmationCode));
     }
 
+    @GetMapping("/invoice")
+    public ResponseEntity<Map<String, BigDecimal>> getInvoiceMapRq(
+            @RequestParam String confirmationCode) {
+        return ResponseEntity.ok(bookingService
+                .prepareTotalPaymentInvoice(confirmationCode));
+    }
+
     @GetMapping("/{mainUserId}/{flightId}")
     public ResponseEntity<Boolean> findDuplicateBooking (
             @PathVariable Long mainUserId,
@@ -62,6 +69,12 @@ public class BookingController {
     @GetMapping("/passengers/{confirmCode}")
     public ResponseEntity<PaxResponseDto> getPassengerList (
             @PathVariable String confirmCode){
+        return ResponseEntity.ok(userService.getPax(confirmCode));
+    }
+
+    @GetMapping("/passengers")
+    public ResponseEntity<PaxResponseDto> getPassengerListRq (
+            @RequestParam String confirmCode){
         return ResponseEntity.ok(userService.getPax(confirmCode));
     }
 }

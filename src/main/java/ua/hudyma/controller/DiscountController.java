@@ -6,30 +6,27 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ua.hudyma.domain.Discount;
 import ua.hudyma.service.DiscountService;
-import ua.hudyma.service.TariffService;
-import ua.hudyma.service.VoucherService;
 
 @RestController
-@RequestMapping("/tariffs")
+@RequestMapping("/discounts")
 @RequiredArgsConstructor
-public class TariffController {
-    private final VoucherService voucherService;
+public class DiscountController {
+
     private final DiscountService discountService;
 
-    @GetMapping("/applyVoucher")
-    ResponseEntity<String> redeemVoucher(@RequestParam Long tariffId,
-                                         @RequestParam String voucherCode) {
-        return ResponseEntity.ok(voucherService.applyVoucher(tariffId, voucherCode));
+    @GetMapping("/announce")
+    public ResponseEntity<Discount> announceDiscount() {
+        return ResponseEntity.ok(discountService
+                .introduceDiscount());
     }
 
-    @GetMapping("/applyDiscount")
-    ResponseEntity<String> applyDiscount (
+    @GetMapping("/apply")
+    public ResponseEntity<String> applyDiscount(
             @RequestParam Long tariffId,
             @RequestParam String discountCode) {
         return ResponseEntity.ok(discountService
                 .applyDiscount(tariffId, discountCode));
     }
-
-
 }

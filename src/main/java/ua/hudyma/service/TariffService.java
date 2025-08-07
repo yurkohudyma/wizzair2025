@@ -8,6 +8,7 @@ import ua.hudyma.domain.Tariff;
 import ua.hudyma.dto.TariffDto;
 import ua.hudyma.repository.BookingRepository;
 import ua.hudyma.repository.TariffRepository;
+import ua.hudyma.repository.VoucherRepository;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
@@ -19,6 +20,8 @@ import java.util.Map;
 public class TariffService {
     private final TariffRepository tariffRepository;
     private final BookingRepository bookingRepository;
+    private final VoucherRepository voucherRepository;
+    private final DiscountRepository discountRepository;
 
     @Value("${wizz.flex.tariff}")
     private BigDecimal wizzFlexTariff;
@@ -64,6 +67,20 @@ public class TariffService {
         }
         tariffMap.put("tariffAmount", tariffAmount);
         tariffMap.put("passengers Quantity", passengerQty);
+        long voucherId = tariffDto.voucherId();
+        long discountId = tariffDto.discountId();
+        if (voucherId != 0L){
+            var voucher = voucherRepository
+                    .findById(voucherId).orElseThrow();
+            tariffMap.put("redeemedVoucherAmount",
+                    voucher.getVoucherAmount().getAmount());
+        }
+        if (discountId != 0L){
+            var discount = discountRepository
+                    .findById(discountId).orElseThrow();
+            tariffMap.put("discountRate",
+                    discount.getDiscountRate().getRate());
+        }
         if (confirmationCode != null){
             var booking = bookingRepository
                     .findByConfirmationCode(confirmationCode).orElseThrow();
