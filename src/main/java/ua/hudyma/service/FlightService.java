@@ -188,8 +188,12 @@ public class FlightService {
 
     @Cacheable(value = "flights", key = "'ALL'", unless = "#result == null || #result.isEmpty()")
     public List<FullFlightDto> getAll() {
+        var start = System.currentTimeMillis();
         var list = flightRepository.findAll();
-        return new ArrayList<>(list.stream().map(FlightMapper.INSTANCE::toDto).toList());
+        log.info ("request time = {}", System.currentTimeMillis() - start + " ms");
+        return new ArrayList<>(list.stream()
+                .map(FlightMapper.INSTANCE::toDto)
+                .toList());
     }
 
 

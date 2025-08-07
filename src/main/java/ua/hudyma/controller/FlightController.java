@@ -56,7 +56,7 @@ public class FlightController {
     }
 
     @GetMapping
-    public List<FullFlightDto> getAllPlanes() {
+    public List<FullFlightDto> getAllFlights() {
         return flightService.getAll();
     }
 

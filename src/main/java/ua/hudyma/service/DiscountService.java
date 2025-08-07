@@ -45,10 +45,10 @@ public class DiscountService {
                 discountCode, tariffId);
     }
 
-    public Discount introduceDiscount() {
+    public Discount introduceDiscount(DiscountRate rate) {
         var discount = new Discount();
         discount.setDiscountCode(generateId(10));
-        discount.setDiscountRate(DiscountRate.TWENTY);
+        discount.setDiscountRate(rate);
         discount.setExpiresOn(now().plusDays(1));
         return discountRepository.save(discount);
     }

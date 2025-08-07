@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ua.hudyma.domain.Discount;
+import ua.hudyma.domain.Discount.DiscountRate;
 import ua.hudyma.service.DiscountService;
 
 @RestController
@@ -17,9 +18,10 @@ public class DiscountController {
     private final DiscountService discountService;
 
     @GetMapping("/announce")
-    public ResponseEntity<Discount> announceDiscount() {
+    public ResponseEntity<Discount> announceDiscount(
+            @RequestParam DiscountRate rate) {
         return ResponseEntity.ok(discountService
-                .introduceDiscount());
+                .introduceDiscount(rate));
     }
 
     @GetMapping("/apply")
