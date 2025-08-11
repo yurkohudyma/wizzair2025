@@ -18,6 +18,7 @@ import ua.hudyma.repository.FlightRepository;
 import ua.hudyma.repository.SeatRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.time.LocalTime.now;
@@ -70,11 +71,12 @@ class SeatServiceTest {
     @Test
     void shouldReturnEmptyList_whenCheckInDeadlinePassed() {
 
-        flight.setFlightDate(LocalDate.now().minusDays(1));
-        flight.setFlightTime(now().plusHours(hrsBeforeCheckInClosed + 1));
+        flight.setFlightDate(LocalDate.now());
+        flight.setFlightTime(now().plusHours(hrsBeforeCheckInClosed));
+        var checkInDeadline = LocalDateTime.of(flight.getFlightDate(),
+                flight.getFlightTime().minusHours(hrsBeforeCheckInClosed));
         log.info("flightTime = {})", flight.getFlightTime());
-        log.info("checkin closes = {})", flight.getFlightTime()
-                .minusHours(hrsBeforeCheckInClosed));
+        log.info("checkin closes = {})", checkInDeadline);
         log.info("now is = {})", now());
 
         booking.setUserList(Collections.emptyList());

@@ -2,6 +2,8 @@ package ua.hudyma.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.hudyma.domain.Discount;
@@ -45,11 +47,17 @@ public class DiscountService {
                 discountCode, tariffId);
     }
 
-    public Discount introduceDiscount(DiscountRate rate) {
-        var discount = new Discount();
-        discount.setDiscountCode(generateId(10));
-        discount.setDiscountRate(rate);
-        discount.setExpiresOn(now().plusDays(1));
-        return discountRepository.save(discount);
+    public ResponseEntity<?> introduceDiscount(DiscountRate rate) {
+        if (!discountRepository.existsByDiscountRate(rate)) {
+            var discount = new Discount();
+            discount.setDiscountCode(generateId(10));
+            discount.setDiscountRate(rate);
+            discount.setExpiresOn(now().plusDays(1));
+            discountRepository.save(discount);
+            return ResponseEntity.ok(discount);
+        }
+        var resultStr = format("discount of a type %s exists", rate);
+        log.error(resultStr);
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(resultStr);
     }
 }
